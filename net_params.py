@@ -91,22 +91,22 @@ synapses_params = [{
     "target_compartment" : "soma",
     "params" : [
         {   # pyr to pyr connection
-            "gmax" : 5 * 1.310724564,  # 1000000
+            "gmax" : 1000 * 1.310724564,
             "tau_d" : 6.489890385,
             "tau_r" : 801.5798994,
             "tau_f" : 19.0939326,
             "Uinc"  : 0.220334906,
-            "Erev" : 0.0,
-            "pconn" : 50,  #0.1,
+            "Erev" : 60.0,
+            "pconn" : 0.1,  #0.1,
         },
         {  # CA3 pyr to pyr connection
-            "gmax": 1 * 1.021220696,
+            "gmax": 0.001 * 1.021220696,
             "tau_d": 7.463702539,
             "tau_r": 724.3667977,
             "tau_f": 18.01005789,
             "Uinc": 0.201847939,
-            "Erev" : 0.0,
-            "pconn" : 50,  #0.1,
+            "Erev" : 60.0,
+            "pconn" : 0.1,  #0.1,
         },
 
     ],
