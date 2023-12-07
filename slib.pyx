@@ -366,7 +366,7 @@ cdef class VonMissesGenerator(OriginFiring):
         self.mult4time = 2 * np.pi * omegas * 0.001
 
         cdef np.ndarray I0 = bessel_i0(self.kappa)
-        self.normalizator = mean_spike_rates / I0 * 0.001
+        self.normalizator = mean_spike_rates / I0 * 0.001 * self.dt # units: probability of spikes during dt
 
         self.t = 0.0
 
@@ -396,6 +396,45 @@ cdef class VonMissesGenerator(OriginFiring):
 
         cdef np.ndarray firings = self.normalizator * np.exp(self.kappa * np.cos(self.mult4time * t - self.phases) )
         self.t += self.dt
+        return firings
+
+    def integrate(self, dt, duration):
+        self.t += dt
+
+cdef class VonMissesSpatialMolulation(VonMissesGenerator):
+    cdef np.ndarray Amps, sigma_t, t_centers
+
+    def __cinit__(self, params, dt=0.1):
+
+        params = params["params"]
+
+        cdef np.ndarray sigma_sp = np.zeros(len(params), dtype=np.float64)
+        cdef np.ndarray maxFiring = np.zeros_like(sigma_sp)
+        cdef np.ndarray v_an = np.zeros_like(sigma_sp)
+        cdef np.ndarray mean_spike_rates = np.zeros_like(sigma_sp)
+        cdef np.ndarray sp_centers = np.zeros_like(sigma_sp)
+
+
+        for p_idx, params_el in enumerate(params):
+            sigma_sp[p_idx] = params_el["sigma_sp"]
+            maxFiring[p_idx] = params_el["maxFiring"]
+            v_an[p_idx] = 0.001 * params_el["v_an"]
+            mean_spike_rates[p_idx] = params_el["mean_spike_rate"]
+            sp_centers[p_idx] = params_el["sp_centers"]
+
+        self.sigma_t = sigma_sp / v_an
+        self.t_centers = sp_centers / v_an
+        self.Amps = 2*(maxFiring - mean_spike_rates) / (mean_spike_rates + 1)
+
+
+    def get_firing(self, t=np.array([])):
+        if t.size == 0:
+            t = self.t
+
+        cdef np.ndarray phase_firings = self.normalizator * np.exp(self.kappa * np.cos(self.mult4time * t - self.phases) )
+        cdef np.ndarray spatial_firings = (1 + self.Amps * np.exp( -0.5 * ((t - self.t_centers) / self.sigma_t)**2))
+
+        cdef np.ndarray firings = phase_firings * spatial_firings
         return firings
 
 ##############################################################################################

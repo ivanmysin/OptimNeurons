@@ -46,17 +46,6 @@ def main():
     plt.show()
 
 
-def test_generators():
-
-
-    params_generators = pr.theta_generators["params"]
-
-    t = np.arange(0, 1000, 0.1).reshape(-1, 1)
-    generators = lib.VonMissesGenerator(params_generators)
-    firings = generators.get_firing(t)
-
-    plt.plot(t, firings)
-    plt.show()
 
 
 if __name__ == '__main__':

@@ -5,21 +5,54 @@ theta_generators = {
     "name" : "theta_inputs",
     "params" : [
     {
+            "name": "ca1pyr",
+            "R": 0.2,
+            "freq": 7.0,
+            "mean_spike_rate": 0.5,
+            "phase": 3.14,
+    },
+    {
         "name": "ca3pyr",
         "R": 0.3,
         "freq": 7.0,
         "mean_spike_rate": 0.5,
         "phase": 1.58,
     },
+    ],
+}
+
+theta_spatial_generators = {
+    "class" : "VonMissesSpatialMolulation",
+    "name" : "theta_spatial_inputs",
+    "params" : [
     {
-        "name": "ca1pyr",
-        "R": 0.2,
+            "name": "ca1pyr",
+            "R": 0.2,
+            "freq": 7.0,
+            "mean_spike_rate": 0.5,
+            "phase": 3.14,
+
+            "sigma_sp" : 5.0, # cm
+            "v_an" : 10.0, # cm/sec
+            "maxFiring" : 20.0, # spike sec in the center of field
+            "sp_centers" : 50.0, # cm
+    },
+    {
+        "name": "ca3pyr",
+        "R": 0.3,
         "freq": 7.0,
         "mean_spike_rate": 0.5,
-        "phase": 3.14,
+        "phase": 1.58,
+
+        "sigma_sp": 8.0,  # cm
+        "v_an": 10.0,  # cm/sec
+        "maxFiring": 10.0,  # spike sec in the center of field
+        "sp_centers": 60.0,  # cm
     },
     ],
 }
+
+
 # {
 #     "name": "ec3",
 #     "R": 0.2,
@@ -91,7 +124,7 @@ synapses_params = [{
     "target_compartment" : "soma",
     "params" : [
         {   # pyr to pyr connection
-            "gmax" : 1000 * 1.310724564,
+            "gmax" : 100000 * 1.310724564,
             "tau_d" : 6.489890385,
             "tau_r" : 801.5798994,
             "tau_f" : 19.0939326,
