@@ -25,6 +25,9 @@ cdef class OriginFiring:
     cpdef integrate(self, double dt, double duration):
         pass
 
+    def getCompartmentByName(self, name):
+        return self
+
 
 cdef class OriginCompartment(OriginFiring):
     cdef np.ndarray V, Isyn, Iext, Icoms
@@ -532,7 +535,7 @@ cdef class Network:
 
         for syn_param in synapse_params:
             synapse = syn_param["class"](syn_param)
-            synapse.set_presyn(self.neurons[syn_param["pre_idx"]])
+            synapse.set_presyn(self.neurons[syn_param["pre_idx"]].getCompartmentByName("soma"))
 
             synapse.set_postsyn(self.neurons[syn_param["post_idx"]].getCompartmentByName(syn_param["target_compartment"]))
             self.synapses.append(synapse)

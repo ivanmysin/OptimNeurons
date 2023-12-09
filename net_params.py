@@ -218,6 +218,23 @@ synapses_params = [
     },
     {
         "class": "PlasticSynapse",
+        "pre_name": "ca1pyr",
+        "post_name": "ca1pyr",
+        "target_compartment": "soma",
+        "params": [
+            {  # pyr to pyr connection
+                "gmax": 1000 * 1.310724564,
+                "tau_d": 6.489890385,
+                "tau_r": 801.5798994,
+                "tau_f": 19.0939326,
+                "Uinc": 0.220334906,
+                "Erev": 60.0,
+                "pconn": 0.1,
+            },
+        ],
+    },
+    {
+        "class": "PlasticSynapse",
         "pre_name": "theta_spatial_inputs_soma",
         "post_name": "ca1pyr",
         "target_compartment": "soma",
