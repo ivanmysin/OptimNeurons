@@ -379,7 +379,6 @@ cdef class VonMissesGenerator(OriginFiring):
         """
         recalulate kappa from R for von Misses function
         """
-
         # if R < 0.53:
         #     kappa = 2 * R + R ** 3 + 5 / 6 * R ** 5
         #

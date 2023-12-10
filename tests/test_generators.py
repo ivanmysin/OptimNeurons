@@ -7,10 +7,10 @@ import slib as lib
 import net_params as pr
 
 
-params_generators = pr.theta_spatial_generators  #pr.theta_generators
+params_generators = pr.theta_generators # pr.theta_spatial_generators_soma  #
 params_generators["class"] = getattr(lib, params_generators["class"])
 
-duration = 10 # sec
+duration = 1.0 # sec
 
 
 t = np.arange(0, 1000*duration, 0.1).reshape(-1, 1)
