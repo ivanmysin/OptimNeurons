@@ -9,13 +9,13 @@ theta_generators = {
     "class" : "VonMissesGenerator",
     "name" : "out_place_ca1pyr",
     "params" : [
-    {
+        {
             "name": "ca1pyr",
             "R": 0.2,
             "freq": THETA_FREQ,
             "mean_spike_rate": 0.5,
             "phase": 3.14,
-    },
+        },
     ],
 }
 
