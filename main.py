@@ -133,7 +133,7 @@ class Simulator:
 
         loss_history = []
         x_history = []
-        def callback(x):
+        def callback(x, *_):
             fobj = self.loss(x)
             loss_history.append(fobj)
             x_history.append(x)
