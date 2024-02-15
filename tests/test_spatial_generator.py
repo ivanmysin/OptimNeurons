@@ -25,7 +25,7 @@ t = t.ravel()
 tc = 2550
 
 
-maxFiring = 20.1
+maxFiring = 25.0
 amp = 2*(maxFiring - meanSR) / (meanSR + 1) # maxFiring / meanSR - 1 #  range [-1, inf]
 sigma_spt = 250
 

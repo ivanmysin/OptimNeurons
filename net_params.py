@@ -1,68 +1,149 @@
 import numpy as np
+
+THETA_FREQ = 5.0 # Частота тета-ритма, Гц
+V_AN = 20        # Скорость бега животного, cm/sec
+
+
 ##### block of generators params #########
 theta_generators = {
     "class" : "VonMissesGenerator",
-    "name" : "theta_inputs",
+    "name" : "out_place_ca1pyr",
     "params" : [
-    {
+        {
             "name": "ca1pyr",
             "R": 0.2,
-            "freq": 7.0,
-            "mean_spike_rate": 5.0, # 0.5,
-            "phase": 3.14,
-    },
-    {
-        "name": "ca3pyr",
-        "R": 0.3,
-        "freq": 7.0,
-        "mean_spike_rate": 0.5,
-        "phase": 1.58,
-    },
-    ],
-}
-
-theta_spatial_generators = {
-    "class" : "VonMissesSpatialMolulation",
-    "name" : "theta_spatial_inputs",
-    "params" : [
-    {
-            "name": "ca1pyr",
-            "R": 0.2,
-            "freq": 7.0,
+            "freq": THETA_FREQ,
             "mean_spike_rate": 0.5,
             "phase": 3.14,
+        },
+    ],
+}
 
-            "sigma_sp" : 5.0, # cm
-            "v_an" : 10.0, # cm/sec
-            "maxFiring" : 20.0, # spike sec in the center of field
-            "sp_centers" : 50.0, # cm
-    },
-    {
-        "name": "ca3pyr",
-        "R": 0.3,
-        "freq": 7.0,
-        "mean_spike_rate": 0.5,
-        "phase": 1.58,
+theta_spatial_generators_soma = {
+    "class" : "VonMissesSpatialMolulation",
+    "name" : "theta_spatial_inputs_soma",
+    "params" : [
+        {
+            "name": "ca3pyr",
+            "R": 0.3,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 0.5,
+            "phase": 1.58,
 
-        "sigma_sp": 8.0,  # cm
-        "v_an": 10.0,  # cm/sec
-        "maxFiring": 10.0,  # spike sec in the center of field
-        "sp_centers": 60.0,  # cm
-    },
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 25.0,  # spike sec in the center of field
+            "sp_centers": 5.0,  # cm
+        },
+        {
+            "name": "pvbas",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 24.0,
+            "phase": 1.58,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 21.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+        {
+            "name": "cckbas",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 9.0,
+            "phase": -1.57,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 8.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+        {
+            "name": "aac",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 29.0,
+            "phase": 0.0,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 27.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+        {
+            "name": "bis",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 27.0,
+            "phase": 3.14,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 24.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
     ],
 }
 
 
-# {
-#     "name": "ec3",
-#     "R": 0.2,
-#     "freq": 7.0,
-#     "mean_spike_rate": 1.5,
-#     "phase": -1.57,
-# # },
+theta_spatial_generators_dend = {
+    "class" : "VonMissesSpatialMolulation",
+    "name" : "theta_spatial_inputs_dend",
+    "params" : [
+        {
+            "name": "ec3",
+            "R": 0.3,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 1.5,
+            "phase": -1.57,
+
+            "sigma_sp": 5.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 25.0,  # spike sec in the center of field
+            "sp_centers": -5.0,  # cm
+        },
+        {
+            "name": "ivy",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 4.0,
+            "phase": -1.58,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 3.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+        {
+            "name": "ngf",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 8.0,
+            "phase": 0.0,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 7.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+        {
+            "name": "olm",
+            "R": 0.35,
+            "freq": THETA_FREQ,
+            "mean_spike_rate": 30.0,
+            "phase": 3.14,
+
+            "sigma_sp": 8.0,  # cm
+            "v_an": V_AN,  # cm/sec
+            "maxFiring": 27.0,  # spike sec in the center of field
+            "sp_centers": 0.0,  # cm
+        },
+    ],
+}
 
 ######################################################################
-NN = 20 # number of neurons
+NN = 1000 # number of neurons
 neuron_params = {
     "class" : "ComplexNeuron",
     "name"  : "ca1pyr",
@@ -72,7 +153,7 @@ neuron_params = {
         "V0": np.zeros(NN, dtype=np.float64) - 5.0,
         "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
         "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
-        "Iextvarience": 0.01, #0.3, # np.zeros(1, dtype=np.float64) +
+        "Iextvarience": 0.3, #
         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
         "EK": np.zeros(NN, dtype=np.float64) - 15.0,
         "El": np.zeros(NN, dtype=np.float64) - 5.0,
@@ -93,7 +174,7 @@ neuron_params = {
         "V0": np.zeros(NN, dtype=np.float64) - 5.0,
         "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
         "Iextmean": 0.0,
-        "Iextvarience": 0.001, #0.3
+        "Iextvarience": 0.3,
         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
         "EK": np.zeros(NN, dtype=np.float64) - 15.0,
         "El": np.zeros(NN, dtype=np.float64) - 5.0,
@@ -117,32 +198,143 @@ neuron_params = {
 }
 ###############################################################################
 ### synapses block ############################################################
-synapses_params = [{
-    "class" : "PlasticSynapse",
-    "pre_name": "theta_inputs",
-    "post_name": "ca1pyr",
-    "target_compartment" : "soma",
-    "params" : [
-        {   # pyr to pyr connection
-            "gmax" : 1000 * 1.310724564, # ns
-            "tau_d" : 6.489890385,
-            "tau_r" : 801.5798994,
-            "tau_f" : 19.0939326,
-            "Uinc"  : 0.220334906,
-            "Erev" : 60.0,
-            "pconn" : 0.1,  #0.1,
-        },
-        {  # CA3 pyr to pyr connection
-            "gmax": 1000 * 1.021220696,
-            "tau_d": 7.463702539,
-            "tau_r": 724.3667977,
-            "tau_f": 18.01005789,
-            "Uinc": 0.201847939,
-            "Erev" : 60.0,
-            "pconn" : 0.1,  #0.1,
-        },
+synapses_params = [
+    {
+        "class" : "PlasticSynapse",
+        "pre_name": "out_place_ca1pyr",
+        "post_name": "ca1pyr",
+        "target_compartment" : "soma",
+        "params" : [
+            {   # pyr to pyr connection
+                "gmax" : 1000 * 1.310724564,
+                "tau_d" : 6.489890385,
+                "tau_r" : 801.5798994,
+                "tau_f" : 19.0939326,
+                "Uinc"  : 0.220334906,
+                "Erev" : 60.0,
+                "pconn" : 0.1,
+            },
+        ],
+    },
+    {
+        "class": "PlasticSynapse",
+        "pre_name": "ca1pyr",
+        "post_name": "ca1pyr",
+        "target_compartment": "soma",
+        "params": [
+            {  # pyr to pyr connection
+                "gmax": 1000 * 1.310724564,
+                "tau_d": 6.489890385,
+                "tau_r": 801.5798994,
+                "tau_f": 19.0939326,
+                "Uinc": 0.220334906,
+                "Erev": 60.0,
+                "pconn": 0.1,
+            },
+        ],
+    },
+    {
+        "class": "PlasticSynapse",
+        "pre_name": "theta_spatial_inputs_soma",
+        "post_name": "ca1pyr",
+        "target_compartment": "soma",
+        "params" : [
+            {  # CA3 pyr to pyr connection
+                "gmax": 1000 * 1.021220696,
+                "tau_d": 7.463702539,
+                "tau_r": 724.3667977,
+                "tau_f": 18.01005789,
+                "Uinc": 0.201847939,
+                "Erev": 60.0,
+                "pconn": 0.1,
+            },
+            { # PV bas to pyr connection
+                "gmax"  : 6.067811614,
+                "tau_d" : 4.408643738,
+                "tau_r" : 637.3779263,
+                "tau_f" : 11.57699627,
+                "Uinc"  : 0.282768383,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+            { # CCK bas to pyr connection
+                "gmax"  : 1.633849863,
+                "tau_d" : 8.261691664,
+                "tau_r" : 659.1560802,
+                "tau_f" : 55.80256764,
+                "Uinc"  : 0.230934787,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+            { # Axo-Axonic cell to pyr connection
+                "gmax"  : 3.059027201,
+                "tau_d" : 6.288868745,
+                "tau_r" : 700.9008886,
+                "tau_f" : 8.885170901,
+                "Uinc"  : 0.303356703,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+            { #CA1 Bistratified (-)0333
+                "gmax"  : 1.4388733,
+                "tau_d" : 11.2889288,
+                "tau_r" : 1164.285493,
+                "tau_f" : 9.208561312,
+                "Uinc"  : 0.280258327,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+        ],
+    },
+    {
+        "class": "PlasticSynapse",
+        "pre_name": "theta_spatial_inputs_dend",
+        "post_name": "ca1pyr",
+        "target_compartment": "dendrite",
+        "params": [
+            {   # EC LIII Pyramidal
+                "gmax"  : 1.369309873,
+                "tau_d" : 6.461721231,
+                "tau_r" : 626.6211383,
+                "tau_f" : 21.84321492,
+                "Uinc"  : 0.236507156,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+            { # CA1 Ivy (-)0333
+                "gmax"  : 1.372446563,
+                "tau_d" : 10.09350595,
+                "tau_r" : 994.5394996,
+                "tau_f" : 11.0166117,
+                "Uinc"  : 0.263139955,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+            {   # CA1 Neurogliaform (-)3000
+                "gmax": 1.645016607,
+                "tau_d": 7.989148919,
+                "tau_r": 783.1238783,
+                "tau_f": 12.28169848,
+                "Uinc": 0.233093825,
+                "Erev": -75.0,
+                "pconn": 0.1,
+            },
+            {  # CA1 O-LM (-)1002
+                "gmax"  : 1.645016607,
+                "tau_d" : 7.989148919,
+                "tau_r" : 783.1238783,
+                "tau_f" : 12.28169848,
+                "Uinc"  : 0.233093825,
+                "Erev"  : -75.0,
+                "pconn" : 0.1,
+            },
+        ]
+    },
+]
 
-    ],
-}, ]
+
+
+
+
 
 ################################################################################
