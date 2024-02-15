@@ -8,7 +8,7 @@ theta_generators = {
             "name": "ca1pyr",
             "R": 0.2,
             "freq": 7.0,
-            "mean_spike_rate": 0.5,
+            "mean_spike_rate": 5.0, # 0.5,
             "phase": 3.14,
     },
     {
@@ -62,7 +62,7 @@ theta_spatial_generators = {
 # # },
 
 ######################################################################
-NN = 2000 # number of neurons
+NN = 20 # number of neurons
 neuron_params = {
     "class" : "ComplexNeuron",
     "name"  : "ca1pyr",
@@ -124,7 +124,7 @@ synapses_params = [{
     "target_compartment" : "soma",
     "params" : [
         {   # pyr to pyr connection
-            "gmax" : 100000 * 1.310724564,
+            "gmax" : 1000 * 1.310724564, # ns
             "tau_d" : 6.489890385,
             "tau_r" : 801.5798994,
             "tau_f" : 19.0939326,
@@ -133,7 +133,7 @@ synapses_params = [{
             "pconn" : 0.1,  #0.1,
         },
         {  # CA3 pyr to pyr connection
-            "gmax": 0.001 * 1.021220696,
+            "gmax": 1000 * 1.021220696,
             "tau_d": 7.463702539,
             "tau_r": 724.3667977,
             "tau_f": 18.01005789,
