@@ -9,7 +9,7 @@ from scipy.signal.windows import parzen
 import time
 import h5py
 from pprint import pprint
-
+from copy import deepcopy
 
 
 class Simulator:
@@ -22,7 +22,7 @@ class Simulator:
         self.Rpc = Rpc
         self.sigma = sigma
 
-        neurons_params = params["neurons"]
+        neurons_params = deepcopy(params["neurons"])
         neurons_idx_by_names = {}
 
         for neuron_idx, neuron in enumerate(neurons_params):
@@ -186,7 +186,7 @@ def main():
     }
 
     # initial changable params
-    X0 = np.zeros(38, dtype=np.float64) - 10000
+    X0 = np.zeros(38, dtype=np.float64)
     bounds = []  # Boundaries for X
 
     x0_idx = 0
@@ -194,15 +194,15 @@ def main():
         try:
             for neuron in neurons_types["params"]:
                 X0[x0_idx] = neuron["maxFiring"]
-                bounds.append([0, 100])
+                bounds.append([0.0001, 100])
                 x0_idx += 1
 
                 X0[x0_idx] = neuron["sp_centers"]
-                bounds.append([-1000, 1000])
+                bounds.append([-100000, 100000])
                 x0_idx += 1
 
                 X0[x0_idx] = neuron["sigma_sp"]
-                bounds.append([0, 1000])
+                bounds.append([0.1, 1000])
                 x0_idx += 1
         except KeyError:
             continue
@@ -210,24 +210,20 @@ def main():
     for synapse_type in params["synapses"]:
         for syn in synapse_type["params"]:
             X0[x0_idx] = syn["gmax"]
-            bounds.append([0, 10000])
+            bounds.append([0.1, 10000])
             x0_idx += 1
 
 
-
-    #Loss(X0, dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
-
-
+    args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
+    #Loss(X0, *args)
 
     timer = time.time()
     print('starting optimization ... ')
 
-    sol = differential_evolution(Loss, x0=X0, popsize=5, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=5, \
+    sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params) )
-
-
+                                 args = args )
 
     print("Time of optimization ", time.time() - timer, " sec")
     print("success ", sol.success)
