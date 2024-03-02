@@ -5,9 +5,10 @@ import slib as lib
 import net_params as pr
 import matplotlib.pyplot as plt
 from scipy.optimize import differential_evolution
+from scipy.signal.windows import parzen
 import time
 import h5py
-
+from pprint import pprint
 
 
 
@@ -58,17 +59,22 @@ class Simulator:
         self.synapses_params = synapses_params
 
 
-
     def run_model(self, X):
 
         x_idx = 0
+
+        #print( self.neurons_params[0]["params"][0]["maxFiring"] )
+
         for i in range(len(self.neurons_params)):
             try:
                 for j in range(len(self.neurons_params[i]["params"])):
+                    if self.neurons_params[i]["params"][j]["maxFiring"] < 0:
+                        print(self.neurons_params[i]["params"][j]["maxFiring"])
+
                     self.neurons_params[i]["params"][j]["maxFiring"] = X[x_idx]
                     x_idx += 1
 
-                    self.neurons_params[i]["params"][j]["spcenters"] = X[x_idx]
+                    self.neurons_params[i]["params"][j]["sp_centers"] = X[x_idx] + 0.5 * self.Duration*self.animal_velocity/1000
                     x_idx += 1
 
                     self.neurons_params[i]["params"][j]["sigma_sp"] = X[x_idx]
@@ -77,12 +83,13 @@ class Simulator:
             except KeyError:
                 continue
 
-        print(x_idx)
-
         for synapse_type in self.synapses_params:
              for syn_idx in range(synapse_type["gmax"].size):
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
+
+
+
 
         net = lib.Network(self.neurons_params, self.synapses_params)
         net.integrate(self.dt, self.Duration)
@@ -91,6 +98,11 @@ class Simulator:
         # Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
 
         firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring() / 0.0001
+
+        win = parzen(101)
+        win = win / np.sum(win)
+
+        firing = np.convolve(firing, win, mode='same')
 
         return firing
     
@@ -130,7 +142,7 @@ class Simulator:
 
         teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=self.sigma, center=center)
         simulated_spike_rate = self.run_model(X)
-        
+
         L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
         # записать simulated_spike_rate, X, значение лосса - в hdf5
         return L
@@ -195,35 +207,33 @@ def main():
         except KeyError:
             continue
 
-    print(x0_idx)
-
     for synapse_type in params["synapses"]:
         for syn in synapse_type["params"]:
             X0[x0_idx] = syn["gmax"]
             bounds.append([0, 10000])
             x0_idx += 1
 
-    #print(X0)
 
-    Loss(X0, dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
 
-    # print(x_params)
+    #Loss(X0, dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
 
-    # timer = time.time()
-    # print('starting optimization ... ')
-    #
-    # sol = differential_evolution(Loss, x0=X0, popsize=5, atol=1e-3, recombination=0.7, \
-    #                              mutation=0.2, bounds=bounds, callback=callback, maxiter=5, \
-    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-    #                              args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params) )
-    #
-    #
-    #
-    # print("Time of optimization ", time.time() - timer, " sec")
-    # print("success ", sol.success)
-    # print("message ", sol.message)
-    # print("number of interation ", sol.nit)
-    # print(sol.x)
+
+
+    timer = time.time()
+    print('starting optimization ... ')
+
+    sol = differential_evolution(Loss, x0=X0, popsize=5, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=5, \
+                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+                                 args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params) )
+
+
+
+    print("Time of optimization ", time.time() - timer, " sec")
+    print("success ", sol.success)
+    print("message ", sol.message)
+    print("number of interation ", sol.nit)
+    print(sol.x)
 
     return
 
