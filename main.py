@@ -129,6 +129,8 @@ class Simulator:
 
         phi0 = -2 * np.pi * theta_freq * 0.001 * center - np.pi - precession[np.argmax(teor_spike_rate)]
         teor_spike_rate *= np.exp(kappa * np.cos(2 * np.pi * theta_freq * t * 0.001 + precession + phi0))
+
+        teor_spike_rate *= 0.001 # !!!!!!
         return teor_spike_rate
 
     def loss(self, X):
@@ -140,10 +142,18 @@ class Simulator:
         t = np.arange(0, self.Duration, self.dt)
         center = 0.5*self.Duration
 
-        teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=self.sigma, center=center)
+        sigma = self.sigma / self.animal_velocity * 1000
+
+        teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
         simulated_spike_rate = self.run_model(X)
 
-        L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
+        # fig, axes = plt.subplots()
+        # cos_ref = 0.25*(np.cos(2*np.pi*t*0.001*self.theta_freq) + 1)
+        # axes.plot(t, teor_spike_rate, color='red', label="Target firing rate")
+        # axes.plot(t, cos_ref, linestyle='dashed')
+        # plt.show()
+
+        L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
         # записать simulated_spike_rate, X, значение лосса - в hdf5
         return L
 
@@ -157,10 +167,10 @@ def Loss(X, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params
     return loss
 
 
-def callback(res_obj):
+def callback(res_obj, convergence):
     with h5py.File("results.h5", "w") as output:
-        output.create_dataset("loss", res_obj.fun)
-        output.create_dataset("X", res_obj.x)
+        output.create_dataset("loss", data=res_obj.fun)
+        output.create_dataset("X", data=res_obj.x)
 
 
 
@@ -215,21 +225,21 @@ def main():
 
 
     args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
-    #Loss(X0, *args)
+    Loss(X0, *args)
 
-    timer = time.time()
-    print('starting optimization ... ')
-
-    sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 args = args )
-
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("success ", sol.success)
-    print("message ", sol.message)
-    print("number of interation ", sol.nit)
-    print(sol.x)
+    # timer = time.time()
+    # print('starting optimization ... ')
+    #
+    # sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              args = args )
+    #
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("success ", sol.success)
+    # print("message ", sol.message)
+    # print("number of interation ", sol.nit)
+    # print(sol.x)
 
     return
 
