@@ -97,7 +97,7 @@ class Simulator:
         # Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
         # Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
 
-        firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring() / 0.0001
+        firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring() # / (1000 * self.dt)
 
         win = parzen(101)
         win = win / np.sum(win)
@@ -225,21 +225,21 @@ def main():
 
 
     args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
-    Loss(X0, *args)
+    #Loss(X0, *args)
 
-    # timer = time.time()
-    # print('starting optimization ... ')
-    #
-    # sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
-    #                              mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
-    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-    #                              args = args )
-    #
-    # print("Time of optimization ", time.time() - timer, " sec")
-    # print("success ", sol.success)
-    # print("message ", sol.message)
-    # print("number of interation ", sol.nit)
-    # print(sol.x)
+    timer = time.time()
+    print('starting optimization ... ')
+
+    sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
+                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+                                 args = args )
+
+    print("Time of optimization ", time.time() - timer, " sec")
+    print("success ", sol.success)
+    print("message ", sol.message)
+    print("number of interation ", sol.nit)
+    print(sol.x)
 
     return
 
