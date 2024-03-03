@@ -213,7 +213,7 @@ synapses_params = [
         "target_compartment" : "soma",
         "params" : [
             {   # pyr to pyr connection
-                "gmax" : 1000 * 1.310724564,
+                "gmax" : 10 * 1.310724564,
                 "tau_d" : 6.489890385,
                 "tau_r" : 801.5798994,
                 "tau_f" : 19.0939326,
@@ -230,7 +230,7 @@ synapses_params = [
         "target_compartment": "soma",
         "params": [
             {  # pyr to pyr connection
-                "gmax": 1000 * 1.310724564,
+                "gmax": 10 * 1.310724564,
                 "tau_d": 6.489890385,
                 "tau_r": 801.5798994,
                 "tau_f": 19.0939326,
@@ -247,7 +247,7 @@ synapses_params = [
         "target_compartment": "soma",
         "params" : [
             {  # CA3 pyr to pyr connection
-                "gmax": 1000 * 1.021220696,
+                "gmax": 10 * 1.021220696,
                 "tau_d": 7.463702539,
                 "tau_r": 724.3667977,
                 "tau_f": 18.01005789,
