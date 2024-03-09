@@ -11,6 +11,9 @@ import h5py
 from pprint import pprint
 from copy import deepcopy
 
+from multiprocessing.pool import Pool
+import multiprocessing
+import pickle
 
 class Simulator:
     def __init__(self, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params):
@@ -37,7 +40,9 @@ class Simulator:
             neurons_idx_by_names[neuron["name"]] = neuron_idx
 
         synapses_params = []
-        for synapse in params["synapses"]:
+        synapses = deepcopy(params["synapses"])
+
+        for synapse in synapses:
             synapse_param = {}
             synapse_param["class"] = getattr(lib, synapse["class"])
             synapse_param["pre_idx"] = neurons_idx_by_names[synapse["pre_name"]]
@@ -49,11 +54,17 @@ class Simulator:
             # в первом словаре списка params берутся ключи, и добавляются в новый synapse_param 
             # со значениями - списком нулей длины списка словарей params
             # каждый словарь списка params отвечает за отдельную пару соединяемых типов нейронов 
-            for syn_idx, syn_el in enumerate(synapse["params"]): 
+            for syn_idx, syn_el in enumerate(synapse["params"]):
                 # для каждого номера и словаря в списке params
                 for key, val in syn_el.items():
                     synapse_param[key][syn_idx] = val
             synapses_params.append(synapse_param)
+
+
+        #print( thread_idx )
+        # if thread_idx == 1:
+        #     for syn in synapses_params:
+        #         pprint(syn)
 
         self.neurons_params = neurons_params
         self.synapses_params = synapses_params
@@ -74,7 +85,7 @@ class Simulator:
                     self.neurons_params[i]["params"][j]["maxFiring"] = X[x_idx]
                     x_idx += 1
 
-                    self.neurons_params[i]["params"][j]["sp_centers"] = X[x_idx] + 0.5 * self.Duration*self.animal_velocity/1000
+                    self.neurons_params[i]["params"][j]["sp_centers"] = 1000*X[x_idx]/self.animal_velocity + 0.5 * self.Duration
                     x_idx += 1
 
                     self.neurons_params[i]["params"][j]["sigma_sp"] = X[x_idx]
@@ -88,11 +99,20 @@ class Simulator:
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
 
+        thread_idx = int(multiprocessing.current_process()._identity[0])
+        #print(thread_idx)
+        #pprint(self.neurons_params)
 
-
+        # with open(f"neurons_{thread_idx}.pickle", "wb") as file:
+        #     pickle.dump(self.neurons_params, file)
+        #
+        # with open(f"synapses_{thread_idx}.pickle", "wb") as file:
+        #     pickle.dump(self.synapses_params, file)
 
         net = lib.Network(self.neurons_params, self.synapses_params)
         net.integrate(self.dt, self.Duration)
+        #print("###########################")
+        #time.sleep(10000)
 
         # Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
         # Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
@@ -167,10 +187,10 @@ def Loss(X, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params
     return loss
 
 
-def callback(res_obj, convergence):
+def callback(intermediate_result=None):
     with h5py.File("results.h5", "w") as output:
-        output.create_dataset("loss", data=res_obj.fun)
-        output.create_dataset("X", data=res_obj.x)
+        output.create_dataset("loss", data=intermediate_result.fun)
+        output.create_dataset("X", data=intermediate_result.x)
 
 
 
@@ -220,12 +240,17 @@ def main():
     for synapse_type in params["synapses"]:
         for syn in synapse_type["params"]:
             X0[x0_idx] = syn["gmax"]
-            bounds.append([0.1, 10000])
+            bounds.append([100, 1000000])
             x0_idx += 1
 
 
     args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
-    #Loss(X0, *args)
+
+    # loss_p = (X0, ) + args
+    #
+    # with Pool(2) as p:
+    #     p.starmap(Loss, ( loss_p, loss_p ))
+
 
     timer = time.time()
     print('starting optimization ... ')

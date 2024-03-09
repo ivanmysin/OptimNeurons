@@ -98,6 +98,9 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.Iextvarience = params["Iextvarience"]
 
         self.ENa = params["ENa"]
+
+        ##print(self.ENa)
+
         self.EK = params["EK"]
         self.El = params["El"]
         self.ECa = params["ECa"]
@@ -143,16 +146,19 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.INa = self.gbarNa * self.m * self.m * self.h * (self.ENa - self.V)
         self.IK_DR = self.gbarK_DR * self.n * (self.EK - self.V)
         self.IK_AHP = self.gbarK_AHP * self.q * (self.EK - self.V)
-        self.IK_C = self.gbarK_C * self.c * (self.EK - self.V)
 
-        cdef np.ndarray tmp = self.CCa / 250.0
-        self.IK_C[tmp < 1] *= tmp[tmp < 1]
+        self.ICa = self.gbarCa * self.s * self.s * (self.ECa - self.V)
 
-        self.ICa = self.gbarCa * self.s * self.s * (self.ECa-self.V)
+
+        cdef np.ndarray tmp = np.minimum(1.0, self.CCa / 250.0)
+        #tmp[tmp > 1] = 1.0
+
+        self.IK_C = self.gbarK_C * self.c * tmp * (self.EK - self.V)
+
         self.Iext = np.random.normal(self.Iextmean, self.Iextvarience, self.V.size)
 
-        self.Isyn[:] = 0.0
-        self.Icoms[:] = 0.0
+        self.Isyn[:] *= 0.0
+        self.Icoms[:] *= 0.0
 
 
     cdef np.ndarray alpha_m(self):
@@ -266,6 +272,10 @@ cdef class PyramideCA1Compartment(OriginCompartment):
 
             self.countSp = self.V < self.th
             I = self.Il + self.INa + self.IK_DR + self.IK_AHP + self.IK_C + self.ICa + self.Isyn + self.Icoms + self.Iext/np.sqrt(dt)
+
+            #print(self.V)
+            #print(self.INa)
+            #print("#########################")
 
             self.V += dt * I / self.Cm
 
@@ -488,7 +498,6 @@ cdef class PlasticSynapse(BaseSynapse):
         Vpost = self.postsyn.getV()
 
         gsyn = self.gmax * self.R
-
         gsyn = np.reshape(gsyn, (-1, 1))
 
         Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
@@ -548,6 +557,7 @@ cdef class Network:
         cdef double t = 0
         while(t < duration):
             for neuron_ind in range(NN):
+                #print(neuron_ind)
                 self.neurons[neuron_ind].integrate(dt, dt)
 
             for s_ind in range(NS):
