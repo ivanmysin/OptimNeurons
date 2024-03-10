@@ -165,7 +165,7 @@ def main():
     import pickle
 
 
-    dt = 0.01 # ms
+    dt = 0.1 # ms
     Duration = 5000 # Время симуляции в ms
 
     # Rpc = pr.default_param4optimization["R_place_cell"]
@@ -227,8 +227,8 @@ def main():
         #neurons_params[-1]['compartments'][0]['gbarK_C '] *= 0.0
         #neurons_params[-1]['compartments'][0]['ENa'][:] = 60.0
 
-        #for synapse in synapses_params:
-        #synapses_params[0]['gmax'] *= 0.0
+        for synapse in synapses_params:
+            synapses_params[0]['gmax'] *= 2.0
 
 
 
