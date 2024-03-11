@@ -1,8 +1,9 @@
-STUFF = "Hi"
 #-*- coding: utf-8 -*-
 """
 lib full cython
 """
+
+#STUFF = "Hi"
 from libc.math cimport exp, cos, sqrt
 from libcpp.map cimport map
 from libcpp.pair cimport pair
@@ -19,7 +20,7 @@ from scipy.special import i0 as bessel_i0
 
 
 cdef class OriginFiring:
-    def __cinit__(self, params):
+    def __cinit__(self, params, dt=0.1):
         pass
 
     cpdef integrate(self, double dt, double duration):
@@ -354,7 +355,7 @@ cdef class ComplexNeuron:
     cdef dict compartments # map [string, OriginCompartment*] compartments
     cdef list connections # vector [IntercompartmentConnection*] connections
 
-    def __cinit__(self, params):
+    def __cinit__(self, params, dt=0.1):
         self.compartments = dict()
 
         for comp in params["compartments"]:
@@ -483,16 +484,21 @@ cdef class VonMissesSpatialMolulation(VonMissesGenerator):
 
 ##############################################################################################
 cdef class BaseSynapse:
-    cdef np.ndarray Erev, gmax, pconn
+    cdef np.ndarray Erev, gmax, pconn, gsyn_hist
     cdef double dt
+    cdef bool is_save_gsyn
     cdef OriginFiring presyn
     cdef OriginCompartment postsyn
 
-    def __cinit__(self, params, dt=0.1):
+    def __cinit__(self, params, dt=0.1, is_save_gsyn=False):
         self.Erev = np.asarray(params['Erev'])
         self.gmax = np.asarray(params['gmax'])
         self.pconn = np.asarray(params['pconn'])
         self.dt = dt
+        self.is_save_gsyn = is_save_gsyn
+
+        if self.is_save_gsyn:
+            self.gsyn_hist = np.zeros_like(self.gmax).reshape(-1, 1)
 
     def set_presyn(self, presyn):
         self.presyn = presyn
@@ -500,10 +506,13 @@ cdef class BaseSynapse:
     def set_postsyn(self, postsyn):
         self.postsyn = postsyn
 
+    def get_gsyn_hist(self):
+        return self.gsyn_hist
+
 cdef class PlasticSynapse(BaseSynapse):
     cdef np.ndarray tau1r, tau_d, tau_r, tau_f, Uinc, X, U, R
 
-    def __cinit__(self, params, dt=0.1):
+    def __cinit__(self, params, dt=0.1, is_save_gsyn=False):
         self.dt = dt
 
         self.Erev = np.asarray(params['Erev'])
@@ -531,6 +540,10 @@ cdef class PlasticSynapse(BaseSynapse):
         #Vpost = self.postsyn.getV()
 
         gsyn = self.gmax * self.R
+
+        if self.is_save_gsyn:
+            self.gsyn_hist = np.append(self.gsyn_hist, gsyn.reshape(-1, 1), axis=1)
+
         #gsyn = np.reshape(gsyn, (-1, 1))
 
         #Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
@@ -565,7 +578,7 @@ cdef class Network:
     #cdef list neuron_params, synapse_params
     cdef double t
 
-    def __cinit__(self, neuron_params, synapse_params):
+    def __cinit__(self, neuron_params, synapse_params, dt=0.1):
         self.neurons = list()
         self.synapses = list()
 
@@ -573,12 +586,12 @@ cdef class Network:
 
 
         for neuron_param in neuron_params:
-            neuron = neuron_param["class"](neuron_param)
+            neuron = neuron_param["class"](neuron_param, dt=dt)
             self.neurons.append(neuron)
 
 
         for syn_param in synapse_params:
-            synapse = syn_param["class"](syn_param)
+            synapse = syn_param["class"](syn_param, dt=dt, is_save_gsyn=syn_param['is_save_gsyn'])
             synapse.set_presyn(self.neurons[syn_param["pre_idx"]].getCompartmentByName("soma"))
 
             synapse.set_postsyn(self.neurons[syn_param["post_idx"]].getCompartmentByName(syn_param["target_compartment"]))
@@ -604,3 +617,6 @@ cdef class Network:
 
     def get_neuron_by_idx(self, idx):
         return self.neurons[idx]
+
+    def get_synapse_by_idx(self, idx):
+        return self.synapses[idx]

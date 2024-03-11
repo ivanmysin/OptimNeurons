@@ -211,6 +211,7 @@ synapses_params = [
         "pre_name": "out_place_ca1pyr",
         "post_name": "ca1pyr",
         "target_compartment" : "soma",
+        "is_save_gsyn" : True,
         "params" : [
             {   # pyr to pyr connection
                 "gmax" : 159341 * 1.310724564,
@@ -228,6 +229,7 @@ synapses_params = [
         "pre_name": "ca1pyr",
         "post_name": "ca1pyr",
         "target_compartment": "soma",
+        "is_save_gsyn": True,
         "params": [
             {  # pyr to pyr connection
                 "gmax": 100 * 1.310724564,
@@ -245,6 +247,7 @@ synapses_params = [
         "pre_name": "theta_spatial_inputs_soma",
         "post_name": "ca1pyr",
         "target_compartment": "soma",
+        "is_save_gsyn": True,
         "params" : [
             {  # CA3 pyr to pyr connection
                 "gmax": 75376 * 1.021220696,
@@ -298,6 +301,7 @@ synapses_params = [
         "pre_name": "theta_spatial_inputs_dend",
         "post_name": "ca1pyr",
         "target_compartment": "dendrite",
+        "is_save_gsyn": True,
         "params": [
             {   # EC LIII Pyramidal
                 "gmax"  : 22784 * 1.369309873,

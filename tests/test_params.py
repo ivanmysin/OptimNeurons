@@ -258,6 +258,7 @@ def main():
         synapse_param["pre_idx"] = neurons_idx_by_names[synapse["pre_name"]]
         synapse_param["post_idx"] = neurons_idx_by_names[synapse["post_name"]]
         synapse_param["target_compartment"] = synapse["target_compartment"]
+        synapse_param["is_save_gsyn"] = synapse["is_save_gsyn"]
 
         for key in synapse["params"][0].keys():
             synapse_param[key] = np.zeros(len(synapse["params"]), dtype=np.float64)
@@ -285,7 +286,7 @@ def main():
     #     plt.show()
 
 
-    net = lib.Network(neurons_params, synapses_params)
+    net = lib.Network(neurons_params, synapses_params, dt=dt)
 
     net.integrate(dt, Duration)
 
@@ -301,17 +302,21 @@ def main():
 
     t = np.linspace(0, Duration, firing.size)
 
-    fig, axes = plt.subplots(nrows=2)
-    #axes[0].set_title(th_idx)
-    axes[0].plot(t, firing)
-    axes[1].plot(t, Vsoma, label='Vsoma')
-    axes[1].plot(t, Vdend, label='Vdend')
-    axes[1].set_ylim(-20, 120)
-    axes[1].legend(loc='upper right')
+    # fig, axes = plt.subplots(nrows=3)
+    # #axes[0].set_title(th_idx)
+    # axes[0].plot(t, firing)
+    # axes[1].plot(t, Vsoma, label='Vsoma')
+    # axes[1].plot(t, Vdend, label='Vdend')
+    # axes[1].set_ylim(-20, 120)
+    # axes[1].legend(loc='upper right')
 
-    # if th_idx < 16:
-    #     plt.show(block=False)
-    # else:
+    fig, axes = plt.subplots(nrows=len(synapses_params))
+    for syn_idx in range(len(synapses_params)):
+        gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
+
+        axes[syn_idx].plot(t, gsyn[:, 1:].T, label='gsyn')
+
+
     plt.show(block=True)
 
 
