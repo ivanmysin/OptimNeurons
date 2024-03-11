@@ -524,7 +524,8 @@ cdef class PlasticSynapse(BaseSynapse):
         self.U = np.zeros_like(self.X)
         self.R = np.zeros_like(self.X)
 
-
+    def get_R(self):
+        return self.R
 
     def add_Isyn2Post(self):
         #Vpost = self.postsyn.getV()

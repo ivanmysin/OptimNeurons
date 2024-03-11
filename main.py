@@ -99,7 +99,7 @@ class Simulator:
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
 
-        thread_idx = int(multiprocessing.current_process()._identity[0])
+        #thread_idx = int(multiprocessing.current_process()._identity[0])
         #print(thread_idx)
         #pprint(self.neurons_params)
 

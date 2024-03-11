@@ -167,11 +167,12 @@ def main():
 
     dt = 0.1 # ms
     Duration = 5000 # Время симуляции в ms
+    Distance = pr.V_AN * (0.001*Duration)
 
     # Rpc = pr.default_param4optimization["R_place_cell"]
     # theta_freq = pr.THETA_FREQ  # 5 Hz
     # slope = pr.default_param4optimization["precession_slope"]  # deg/cm
-    # animal_velocity = pr.V_AN  # cm/sec
+    animal_velocity = pr.V_AN  # cm/sec
     # sigma = pr.default_param4optimization["sigma_place_field"] # cm
     #
     # Distance = Duration * 0.001 * animal_velocity  # Расстояние, которое пробегает животное за время симуляции в cm
@@ -214,59 +215,104 @@ def main():
     #
     # pprint(synapses_params)
 
-    for th_idx in [4, ]: #range(1, 17)
-        print(th_idx)
-        with open(f"../neurons_{th_idx}.pickle", "rb") as file:
-            neurons_params = pickle.load(file)
-
-        with open(f"../synapses_{th_idx}.pickle", "rb") as file:
-            synapses_params = pickle.load(file)
+    # for th_idx in [4, ]: #range(1, 17)
+    #     print(th_idx)
+    #     with open(f"../neurons_{th_idx}.pickle", "rb") as file:
+    #         neurons_params = pickle.load(file)
+    #
+    #     with open(f"../synapses_{th_idx}.pickle", "rb") as file:
+    #         synapses_params = pickle.load(file)
 
         # pprint(neurons_params)
         # pprint(synapses_params)
         #neurons_params[-1]['compartments'][0]['gbarK_C '] *= 0.0
         #neurons_params[-1]['compartments'][0]['ENa'][:] = 60.0
 
-        for synapse in synapses_params:
-            synapses_params[0]['gmax'] *= 2.0
+        # for synapse in synapses_params:
+        #     synapse[0]['gmax'] *= 2.0
+
+    neurons_params = [pr.theta_generators, pr.theta_spatial_generators_soma, pr.theta_spatial_generators_dend, \
+                pr.neuron_params]
+
+    neurons_idx_by_names = {}
+
+    for neuron_idx, neuron in enumerate(neurons_params):
+        neuron["class"] = getattr(lib, neuron["class"])
+
+        try:
+            for neuron_param in neuron["params"]:
+                neuron_param["sp_centers"] += 0.5 * Duration * animal_velocity / 1000 # Distance
 
 
+        except KeyError:  # либо 50005 либо 50000 получается - неправильный перевод
+            pass
+
+        neurons_idx_by_names[neuron["name"]] = neuron_idx
+
+    synapses_params = []
+    #synapses = deepcopy(params["synapses"])
+
+    for synapse in pr.synapses_params:
+        synapse_param = {}
+        synapse_param["class"] = getattr(lib, synapse["class"])
+        synapse_param["pre_idx"] = neurons_idx_by_names[synapse["pre_name"]]
+        synapse_param["post_idx"] = neurons_idx_by_names[synapse["post_name"]]
+        synapse_param["target_compartment"] = synapse["target_compartment"]
+
+        for key in synapse["params"][0].keys():
+            synapse_param[key] = np.zeros(len(synapse["params"]), dtype=np.float64)
+        # в первом словаре списка params берутся ключи, и добавляются в новый synapse_param
+        # со значениями - списком нулей длины списка словарей params
+        # каждый словарь списка params отвечает за отдельную пару соединяемых типов нейронов
+        for syn_idx, syn_el in enumerate(synapse["params"]):
+            # для каждого номера и словаря в списке params
+            for key, val in syn_el.items():
+                synapse_param[key][syn_idx] = val
+
+            # synapse_param['gmax'][synapse_param['Erev'] > 10] *= 2.0
+            # synapse_param['gmax'][synapse_param['Erev'] < 0] *= 0.0
+
+        synapses_params.append(synapse_param)
+
+    # t = np.linspace(0, Duration, int(Duration/dt) )
+    # for neuron in neurons_params:
+    #     if neuron['class'] == 'ComplexNeuron': continue
+    #
+    #     gen = getattr(lib, neuron["class"])(neuron)
+    #
+    #     fir = gen.get_firing(t.reshape(-1, 1))
+    #     plt.plot(t, fir)
+    #     plt.show()
 
 
+    net = lib.Network(neurons_params, synapses_params)
 
+    net.integrate(dt, Duration)
 
+    Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
+    Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
 
+    firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring()  # / (1000 * self.dt)
 
+    win = parzen(101)
+    win = win / np.sum(win)
 
+    firing = np.convolve(firing, win, mode='same')
 
-        net = lib.Network(neurons_params, synapses_params)
+    t = np.linspace(0, Duration, firing.size)
 
-        net.integrate(dt, Duration)
+    fig, axes = plt.subplots(nrows=2)
+    #axes[0].set_title(th_idx)
+    axes[0].plot(t, firing)
+    axes[1].plot(t, Vsoma, label='Vsoma')
+    axes[1].plot(t, Vdend, label='Vdend')
+    axes[1].set_ylim(-20, 120)
+    axes[1].legend(loc='upper right')
 
-        Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
-        Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
-
-        firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring()  # / (1000 * self.dt)
-
-        win = parzen(101)
-        win = win / np.sum(win)
-
-        firing = np.convolve(firing, win, mode='same')
-
-        t = np.linspace(0, Duration, firing.size)
-
-        fig, axes = plt.subplots(nrows=2)
-        axes[0].set_title(th_idx)
-        axes[0].plot(t, firing)
-        axes[1].plot(t, Vsoma, label='Vsoma')
-        axes[1].plot(t, Vdend, label='Vdend')
-        axes[1].set_ylim(-20, 60)
-        axes[1].legend(loc='upper right')
-
-        # if th_idx < 16:
-        #     plt.show(block=False)
-        # else:
-        plt.show(block=True)
+    # if th_idx < 16:
+    #     plt.show(block=False)
+    # else:
+    plt.show(block=True)
 
 
 main()

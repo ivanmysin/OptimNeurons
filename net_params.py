@@ -253,7 +253,7 @@ synapses_params = [
                 "tau_f": 18.01005789,
                 "Uinc": 0.201847939,
                 "Erev": 60.0,
-                "pconn": 0.16,
+                "pconn": 0.08, # 0.16,
             },
             { # PV bas to pyr connection
                 "gmax"  : 336 * 6.067811614,
