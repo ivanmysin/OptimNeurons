@@ -33,6 +33,7 @@ cdef class OriginCompartment(OriginFiring):
     cdef np.ndarray V, Isyn, Iext, Icoms
     cdef np.ndarray Vhist
     cdef np.ndarray firing
+    cdef np.ndarray g_tot, g_E
 
     def __cinit__(self, params):
         pass
@@ -43,8 +44,10 @@ cdef class OriginCompartment(OriginFiring):
     cdef void setIext(self, np.ndarray Iext):
         self.Iext = Iext
 
-    cdef addIsyn(self, np.ndarray Isyn):
-        self.Isyn += Isyn
+    cdef addIsyn(self, gsyn, gE):
+        #self.Isyn += Isyn
+        self.g_tot += gsyn
+        self.g_E += gE
 
     cdef addIcoms(self, np.ndarray Icoms):
         self.Icoms += Icoms
@@ -98,6 +101,9 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.Iextvarience = params["Iextvarience"]
 
         self.ENa = params["ENa"]
+
+        ##print(self.ENa)
+
         self.EK = params["EK"]
         self.El = params["El"]
         self.ECa = params["ECa"]
@@ -136,23 +142,54 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.c = self.alpha_c() / (self.alpha_c() + self.beta_c())
         self.q = self.alpha_q() / (self.alpha_q() + self.beta_q())
 
+        self.g_tot = np.zeros_like(self.V)
+        self.g_E = np.zeros_like(self.V)
+
         self.calculate_currents()
 
+
+
+
     cdef void calculate_currents(self):
+
+        self.g_tot[:] *= 0.0
+        self.g_E[:] *= 0.0
+
         self.Il = self.gl * (self.El - self.V)
-        self.INa = self.gbarNa * self.m * self.m * self.h * (self.ENa - self.V)
-        self.IK_DR = self.gbarK_DR * self.n * (self.EK - self.V)
-        self.IK_AHP = self.gbarK_AHP * self.q * (self.EK - self.V)
-        self.IK_C = self.gbarK_C * self.c * (self.EK - self.V)
 
-        cdef np.ndarray tmp = self.CCa / 250.0
-        self.IK_C[tmp < 1] *= tmp[tmp < 1]
+        self.g_tot += self.gl
+        self.g_E += self.gl * self.El
 
-        self.ICa = self.gbarCa * self.s * self.s * (self.ECa-self.V)
+        gNa = self.gbarNa * self.m * self.m * self.h
+        self.INa = gNa * (self.ENa - self.V)
+        self.g_tot += gNa
+        self.g_E += gNa * self.ENa
+
+        gKDR = self.gbarK_DR * self.n
+        self.IK_DR = gKDR * (self.EK - self.V)
+        self.g_tot += gKDR
+        self.g_E += gKDR * self.EK
+
+        gKAHP = self.gbarK_AHP * self.q
+        self.IK_AHP = gKAHP * (self.EK - self.V)
+        self.g_tot += gKAHP
+        self.g_E += gKDR * self.EK
+
+        gCa = self.gbarCa * self.s * self.s
+        self.ICa = gCa * (self.ECa - self.V)
+        self.g_tot += gCa
+        self.g_E += gCa * self.ECa
+
+        cdef np.ndarray tmp = np.minimum(1.0, self.CCa / 250.0)
+        gKC = self.gbarK_C * self.c * tmp
+        self.IK_C = gKC * (self.EK - self.V)
+        self.g_tot += gKC
+        self.g_E += gKC * self.EK
+
         self.Iext = np.random.normal(self.Iextmean, self.Iextvarience, self.V.size)
 
-        self.Isyn[:] = 0.0
-        self.Icoms[:] = 0.0
+        self.Isyn[:] *= 0.0
+        self.Icoms[:] *= 0.0
 
 
     cdef np.ndarray alpha_m(self):
@@ -265,7 +302,12 @@ cdef class PyramideCA1Compartment(OriginCompartment):
             self.Vhist = np.append(self.Vhist, self.V[0])
 
             self.countSp = self.V < self.th
-            I = self.Il + self.INa + self.IK_DR + self.IK_AHP + self.IK_C + self.ICa + self.Isyn + self.Icoms + self.Iext/np.sqrt(dt)
+            #I = self.Il + self.INa + self.IK_DR + self.IK_AHP + self.IK_C + self.ICa + self.Isyn + self.Icoms + self.Iext/np.sqrt(dt)
+            I = self.Icoms + self.Iext/np.sqrt(dt)
+
+            tau_m = self.Cm / self.g_tot
+            Vinf = self.g_E / self.g_tot
+            self.V = Vinf - (Vinf - self.V) * np.exp(-dt / tau_m)
 
             self.V += dt * I / self.Cm
 
@@ -482,20 +524,23 @@ cdef class PlasticSynapse(BaseSynapse):
         self.U = np.zeros_like(self.X)
         self.R = np.zeros_like(self.X)
 
-
+    def get_R(self):
+        return self.R
 
     def add_Isyn2Post(self):
-        Vpost = self.postsyn.getV()
+        #Vpost = self.postsyn.getV()
 
         gsyn = self.gmax * self.R
+        #gsyn = np.reshape(gsyn, (-1, 1))
 
-        gsyn = np.reshape(gsyn, (-1, 1))
+        #Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
+        #Itmp = gsyn * Vdiff
+        #Isyn = np.sum(Itmp, axis=0)
 
-        Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
-        Itmp = gsyn * Vdiff
-        Isyn = np.sum(Itmp, axis=0)
+        gE = np.sum(gsyn * self.Erev)
 
-        self.postsyn.addIsyn(Isyn)
+        gsyn_tot = np.sum(gsyn)
+        self.postsyn.addIsyn(gsyn_tot, gE)
         return
 
     def integrate(self, dt):
@@ -548,6 +593,7 @@ cdef class Network:
         cdef double t = 0
         while(t < duration):
             for neuron_ind in range(NN):
+                #print(neuron_ind)
                 self.neurons[neuron_ind].integrate(dt, dt)
 
             for s_ind in range(NS):
