@@ -150,7 +150,7 @@ theta_spatial_generators_dend = {
 }
 
 ######################################################################
-NN = 10 # number of neurons
+NN = 100 # number of neurons
 neuron_params = {
     "class" : "ComplexNeuron",
     "name"  : "ca1pyr",
@@ -256,7 +256,7 @@ synapses_params = [
                 "tau_f": 18.01005789,
                 "Uinc": 0.201847939,
                 "Erev": 60.0,
-                "pconn": 0.08, # 0.16,
+                "pconn": 0.016, #0.16,
             },
             { # PV bas to pyr connection
                 "gmax"  : 336 * 6.067811614,

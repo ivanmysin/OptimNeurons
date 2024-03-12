@@ -295,26 +295,28 @@ def main():
 
     firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring()  # / (1000 * self.dt)
 
-    win = parzen(101)
+    win = parzen(201)
     win = win / np.sum(win)
 
     firing = np.convolve(firing, win, mode='same')
 
     t = np.linspace(0, Duration, firing.size)
 
-    # fig, axes = plt.subplots(nrows=3)
-    # #axes[0].set_title(th_idx)
-    # axes[0].plot(t, firing)
-    # axes[1].plot(t, Vsoma, label='Vsoma')
-    # axes[1].plot(t, Vdend, label='Vdend')
-    # axes[1].set_ylim(-20, 120)
-    # axes[1].legend(loc='upper right')
+    fig, axes = plt.subplots(nrows=2)
+    #axes[0].set_title(th_idx)
+    axes[0].plot(t, firing)
+    axes[1].plot(t, Vsoma, label='Vsoma')
+    axes[1].plot(t, Vdend, label='Vdend')
+    axes[1].set_ylim(-20, 120)
+    axes[1].legend(loc='upper right')
 
     fig, axes = plt.subplots(nrows=len(synapses_params))
-    for syn_idx in range(len(synapses_params)):
+    for syn_idx, synapse in enumerate(synapses_params):
         gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
 
         axes[syn_idx].plot(t, gsyn[:, 1:].T, label='gsyn')
+
+        axes[syn_idx].set_title(synapse["pre_idx"])
 
 
     plt.show(block=True)

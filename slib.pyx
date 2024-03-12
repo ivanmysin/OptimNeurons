@@ -308,6 +308,8 @@ cdef class PyramideCA1Compartment(OriginCompartment):
 
             tau_m = self.Cm / self.g_tot
             Vinf = self.g_E / self.g_tot
+
+            #print(Vinf)
             self.V = Vinf - (Vinf - self.V) * np.exp(-dt / tau_m)
 
             self.V += dt * I / self.Cm
@@ -516,7 +518,7 @@ cdef class PlasticSynapse(BaseSynapse):
         self.dt = dt
 
         self.Erev = np.asarray(params['Erev'])
-        self.Erev = np.reshape(self.Erev, (-1, 1))
+        #self.Erev = np.reshape(self.Erev, (-1, 1))
 
 
         self.gmax = np.asarray(params['gmax'])
@@ -551,7 +553,6 @@ cdef class PlasticSynapse(BaseSynapse):
         #Isyn = np.sum(Itmp, axis=0)
 
         gE = np.sum(gsyn * self.Erev)
-
         gsyn_tot = np.sum(gsyn)
         self.postsyn.addIsyn(gsyn_tot, gE)
         return
