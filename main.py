@@ -48,6 +48,7 @@ class Simulator:
             synapse_param["pre_idx"] = neurons_idx_by_names[synapse["pre_name"]]
             synapse_param["post_idx"] = neurons_idx_by_names[synapse["post_name"]]
             synapse_param["target_compartment"] = synapse["target_compartment"]
+            synapse_param["is_save_gsyn"] = synapse["is_save_gsyn"]
 
             for key in synapse["params"][0].keys():
                 synapse_param[key] = np.zeros(len(synapse["params"]), dtype=np.float64)
@@ -109,7 +110,7 @@ class Simulator:
         # with open(f"synapses_{thread_idx}.pickle", "wb") as file:
         #     pickle.dump(self.synapses_params, file)
 
-        net = lib.Network(self.neurons_params, self.synapses_params)
+        net = lib.Network(self.neurons_params, self.synapses_params, dt=self.dt)
         net.integrate(self.dt, self.Duration)
         #print("###########################")
         #time.sleep(10000)
@@ -119,12 +120,24 @@ class Simulator:
 
         firing = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getFiring() # / (1000 * self.dt)
 
-        win = parzen(101)
+        win = parzen(201)
         win = win / np.sum(win)
 
         firing = np.convolve(firing, win, mode='same')
 
-        return firing
+        gE = 0.0
+        gtot = 0.0
+
+        for syn_idx, synapse in enumerate(self.synapses_params):
+            gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
+
+            gtot += np.sum(gsyn[:, 1:], axis=0)
+            gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
+
+        Erev_sum = gE / gtot
+
+
+        return firing, Erev_sum
     
     def r2kappa(self, R):
         """
@@ -165,7 +178,7 @@ class Simulator:
         sigma = self.sigma / self.animal_velocity * 1000
 
         teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
-        simulated_spike_rate = self.run_model(X)
+        simulated_spike_rate, Erev_sum = self.run_model(X)
 
         # fig, axes = plt.subplots()
         # cos_ref = 0.25*(np.cos(2*np.pi*t*0.001*self.theta_freq) + 1)
@@ -173,7 +186,12 @@ class Simulator:
         # axes.plot(t, cos_ref, linestyle='dashed')
         # plt.show()
 
+
+        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2)
+
         L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
+
+        L += 0.001 * np.sum( (E_tot_t - Erev_sum)**2 )
         # записать simulated_spike_rate, X, значение лосса - в hdf5
         return L
 

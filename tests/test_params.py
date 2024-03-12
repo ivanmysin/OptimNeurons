@@ -173,8 +173,8 @@ def main():
     # theta_freq = pr.THETA_FREQ  # 5 Hz
     # slope = pr.default_param4optimization["precession_slope"]  # deg/cm
     animal_velocity = pr.V_AN  # cm/sec
-    # sigma = pr.default_param4optimization["sigma_place_field"] # cm
-    #
+    sigma = pr.default_param4optimization["sigma_place_field"] # cm
+
     # Distance = Duration * 0.001 * animal_velocity  # Расстояние, которое пробегает животное за время симуляции в cm
     #
     # if Distance < 8 * sigma:
@@ -302,7 +302,7 @@ def main():
 
     t = np.linspace(0, Duration, firing.size)
 
-    fig, axes = plt.subplots(nrows=2)
+    fig, axes = plt.subplots(nrows=3)
     #axes[0].set_title(th_idx)
     axes[0].plot(t, firing)
     axes[1].plot(t, Vsoma, label='Vsoma')
@@ -310,13 +310,23 @@ def main():
     axes[1].set_ylim(-20, 120)
     axes[1].legend(loc='upper right')
 
-    fig, axes = plt.subplots(nrows=len(synapses_params))
+    gE = 0.0
+    gtot = 0.0
+
+    #fig, axes = plt.subplots(nrows=len(synapses_params))
     for syn_idx, synapse in enumerate(synapses_params):
         gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
 
-        axes[syn_idx].plot(t, gsyn[:, 1:].T, label='gsyn')
+        gtot += np.sum(gsyn[:, 1:], axis=0)
+        gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
-        axes[syn_idx].set_title(synapse["pre_idx"])
+    sigma_t = sigma / animal_velocity * 1000
+    E_tot_t = 40 * np.exp(  -0.5*(  (t - 0.5*t[-1])/ sigma_t )**2  )
+    Erev_tot = gE  / gtot
+    axes[2].plot(t, Erev_tot, label='Erev_tot')
+    axes[2].plot(t, E_tot_t, label='Erev_tot')
+
+    #axes[syn_idx].set_title(synapse["pre_idx"])
 
 
     plt.show(block=True)

@@ -162,7 +162,7 @@ neuron_params = {
         "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
         "Iextvarience": 0.3, #
         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
-        "EK": np.zeros(NN, dtype=np.float64) - 15.0,
+        "EK": np.zeros(NN, dtype=np.float64) - 25.0,
         "El": np.zeros(NN, dtype=np.float64) - 5.0,
         "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
         "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
@@ -183,7 +183,7 @@ neuron_params = {
         "Iextmean": 0.0,
         "Iextvarience": 0.3,
         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
-        "EK": np.zeros(NN, dtype=np.float64) - 15.0,
+        "EK": np.zeros(NN, dtype=np.float64) - 25.0,
         "El": np.zeros(NN, dtype=np.float64) - 5.0,
         "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
         "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
@@ -265,7 +265,7 @@ synapses_params = [
                 "tau_f" : 11.57699627,
                 "Uinc"  : 0.282768383,
                 "Erev"  : -15.0,
-                "pconn" : 0.006,
+                "pconn" : 0.1, # 0.006,
             },
             { # CCK bas to pyr connection
                 "gmax"  : 395 * 1.633849863,
@@ -274,7 +274,7 @@ synapses_params = [
                 "tau_f" : 55.80256764,
                 "Uinc"  : 0.230934787,
                 "Erev"  : -15.0,
-                "pconn" : 0.006,
+                "pconn" : 0.1, #0.006,
             },
             { # Axo-Axonic cell to pyr connection
                 "gmax"  : 312 * 3.059027201,
@@ -283,7 +283,7 @@ synapses_params = [
                 "tau_f" : 8.885170901,
                 "Uinc"  : 0.303356703,
                 "Erev"  : -15.0,
-                "pconn" : 0.006,
+                "pconn" : 0.1, #0.006,
             },
             { #CA1 Bistratified (-)0333
                 "gmax"  : 804 * 1.4388733,
@@ -292,7 +292,7 @@ synapses_params = [
                 "tau_f" : 9.208561312,
                 "Uinc"  : 0.280258327,
                 "Erev"  : -15.0,
-                "pconn" : 0.007,
+                "pconn" : 0.1, #0.007,
             },
         ],
     },
@@ -310,7 +310,7 @@ synapses_params = [
                 "tau_f" : 21.84321492,
                 "Uinc"  : 0.236507156,
                 "Erev"  : 60.0,
-                "pconn" : 0.008,
+                "pconn" : 0.1, #0.008,
             },
             { # CA1 Ivy (-)0333
                 "gmax"  : 778 * 1.372446563,
@@ -319,7 +319,7 @@ synapses_params = [
                 "tau_f" : 11.0166117,
                 "Uinc"  : 0.263139955,
                 "Erev"  : -15.0,
-                "pconn" : 0.006,
+                "pconn" : 0.1, #0.006,
             },
             {   # CA1 Neurogliaform (-)3000
                 "gmax": 1114 * 1.645016607,
@@ -328,7 +328,7 @@ synapses_params = [
                 "tau_f": 12.28169848,
                 "Uinc": 0.233093825,
                 "Erev": -15.0,
-                "pconn": 0.002,
+                "pconn": 0.1, #0.002,
             },
             {  # CA1 O-LM (-)1002
                 "gmax"  : 521 * 1.645016607,
@@ -337,7 +337,7 @@ synapses_params = [
                 "tau_f" : 12.28169848,
                 "Uinc"  : 0.233093825,
                 "Erev"  : -15.0,
-                "pconn" : 0.002,
+                "pconn" : 0.1, #0.002,
             },
         ]
     },
