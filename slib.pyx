@@ -570,7 +570,7 @@ cdef class PlasticSynapse(BaseSynapse):
         #Itmp = gsyn * Vdiff
         #Isyn = np.sum(Itmp, axis=0)
 
-        gE = np.sum(gsyn * self.Erev) + np.sum( g_nmda_tot * self.Erev.reshape(-1, 1), axis=0)
+        gE = np.sum(gsyn * self.Erev) + np.sum( g_nmda * self.Erev.reshape(-1, 1), axis=0)
         gsyn_tot = np.sum(gsyn) + g_nmda_tot
         self.postsyn.addIsyn(gsyn_tot, gE)
         return
