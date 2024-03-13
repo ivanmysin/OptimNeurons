@@ -513,6 +513,7 @@ cdef class BaseSynapse:
 
 cdef class PlasticSynapse(BaseSynapse):
     cdef np.ndarray tau1r, tau_d, tau_r, tau_f, Uinc, X, U, R
+    cdef np.ndarray Mg0_b, a_nmda, tau_rise_nmda, tau_decay_nmda, gmax_nmda, h_nmda, gnmda
 
     def __cinit__(self, params, dt=0.1, is_save_gsyn=False):
         self.dt = dt
@@ -535,11 +536,28 @@ cdef class PlasticSynapse(BaseSynapse):
         self.U = np.zeros_like(self.X)
         self.R = np.zeros_like(self.X)
 
+        self.gmax_nmda = np.asarray(params['gmax_nmda'])
+        self.Mg0_b = np.asarray(params['Mg0']) / np.asarray(params['b'])
+        self.a_nmda = np.asarray(params['a_nmda'])
+        self.tau_rise_nmda = np.asarray(params['tau_rise_nmda'])
+        self.tau_decay_nmda = np.asarray(params['tau_rise_nmda'])
+
+        self.gnmda = np.zeros_like(self.X)
+        self.h_nmda = np.zeros_like(self.X)
+
+
+
+
     def get_R(self):
         return self.R
 
     def add_Isyn2Post(self):
-        #Vpost = self.postsyn.getV()
+        Vpost = self.postsyn.getV()
+
+        # cooношение размерностей тут!!!
+        g_nmda = (self.gmax_nmda * self.gnmda).reshape(-1, 1) / (1.0 + np.exp(-self.a_nmda.reshape(-1, 1) * Vpost.reshape(1, -1) ) * self.Mg0_b.reshape(-1, 1) )
+
+        g_nmda_tot = np.sum(g_nmda, axis=0)
 
         gsyn = self.gmax * self.R
 
@@ -552,8 +570,8 @@ cdef class PlasticSynapse(BaseSynapse):
         #Itmp = gsyn * Vdiff
         #Isyn = np.sum(Itmp, axis=0)
 
-        gE = np.sum(gsyn * self.Erev)
-        gsyn_tot = np.sum(gsyn)
+        gE = np.sum(gsyn * self.Erev) + np.sum( g_nmda_tot * self.Erev.reshape(-1, 1), axis=0)
+        gsyn_tot = np.sum(gsyn) + g_nmda_tot
         self.postsyn.addIsyn(gsyn_tot, gE)
         return
 
@@ -566,10 +584,14 @@ cdef class PlasticSynapse(BaseSynapse):
         x_ = 1 + (self.X - 1 + self.tau1r * self.U) * np.exp(-dt / self.tau_r) - self.tau1r * self.U
 
         u_ = self.U * np.exp(-dt / self.tau_f)
-        self.U = u_ + self.Uinc * (1 - u_) * Spre_normed
-        self.R = y_ + self.U * x_ * Spre_normed
-        self.X = x_ - self.U * x_ * Spre_normed
 
+        released_mediator = self.U * x_ * Spre_normed
+        self.U = u_ + self.Uinc * (1 - u_) * Spre_normed
+        self.R = y_ + released_mediator
+        self.X = x_ - released_mediator
+
+        self.h_nmda = self.h_nmda * np.exp(-dt / self.tau_rise_nmda) + released_mediator
+        self.gnmda = self.gnmda * np.exp(-dt / self.tau_decay_nmda) + self.h_nmda
         self.add_Isyn2Post()
         return
 ################################################################################################

@@ -221,6 +221,13 @@ synapses_params = [
                 "Uinc"  : 0.220334906,
                 "Erev" : 60.0,
                 "pconn" : 0.01,
+
+                'gmax_nmda' : 159341 * 0.1310724564,
+                'Mg0' : 1.0,
+                'b' : 3.57,
+                'a_nmda' : 0.062,
+                'tau_rise_nmda' : 2.0,
+                'tau_rise_nmda' : 89.0,
             },
         ],
     },
@@ -239,6 +246,13 @@ synapses_params = [
                 "Uinc": 0.220334906,
                 "Erev": 60.0,
                 "pconn": 0.1,
+
+                'gmax_nmda': 159341 * 0.1310724564,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
         ],
     },
@@ -257,6 +271,13 @@ synapses_params = [
                 "Uinc": 0.201847939,
                 "Erev": 60.0,
                 "pconn": 0.016, #0.16,
+
+                'gmax_nmda': 0.1 * 75376 * 1.021220696,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             { # PV bas to pyr connection
                 "gmax"  : 336 * 6.067811614,
@@ -266,6 +287,13 @@ synapses_params = [
                 "Uinc"  : 0.282768383,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, # 0.006,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             { # CCK bas to pyr connection
                 "gmax"  : 395 * 1.633849863,
@@ -275,6 +303,13 @@ synapses_params = [
                 "Uinc"  : 0.230934787,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, #0.006,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             { # Axo-Axonic cell to pyr connection
                 "gmax"  : 312 * 3.059027201,
@@ -284,6 +319,13 @@ synapses_params = [
                 "Uinc"  : 0.303356703,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, #0.006,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             { #CA1 Bistratified (-)0333
                 "gmax"  : 804 * 1.4388733,
@@ -293,6 +335,13 @@ synapses_params = [
                 "Uinc"  : 0.280258327,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, #0.007,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
         ],
     },
@@ -311,6 +360,13 @@ synapses_params = [
                 "Uinc"  : 0.236507156,
                 "Erev"  : 60.0,
                 "pconn" : 0.1, #0.008,
+
+                'gmax_nmda':  22784 * 1.369309873,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             { # CA1 Ivy (-)0333
                 "gmax"  : 778 * 1.372446563,
@@ -320,6 +376,13 @@ synapses_params = [
                 "Uinc"  : 0.263139955,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, #0.006,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             {   # CA1 Neurogliaform (-)3000
                 "gmax": 1114 * 1.645016607,
@@ -329,6 +392,13 @@ synapses_params = [
                 "Uinc": 0.233093825,
                 "Erev": -15.0,
                 "pconn": 0.1, #0.002,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
             {  # CA1 O-LM (-)1002
                 "gmax"  : 521 * 1.645016607,
@@ -338,6 +408,13 @@ synapses_params = [
                 "Uinc"  : 0.233093825,
                 "Erev"  : -15.0,
                 "pconn" : 0.1, #0.002,
+
+                'gmax_nmda': 0.0,
+                'Mg0': 1.0,
+                'b': 3.57,
+                'a_nmda': 0.062,
+                'tau_rise_nmda': 2.0,
+                'tau_rise_nmda': 89.0,
             },
         ]
     },

@@ -99,8 +99,11 @@ class Simulator:
              for syn_idx in range(synapse_type["gmax"].size):
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
-
-        #thread_idx = int(multiprocessing.current_process()._identity[0])
+        
+        try:
+            thread_idx = int(multiprocessing.current_process()._identity[0])
+        except IndexError:
+            thread_idx = 0
         #print(thread_idx)
         #pprint(self.neurons_params)
 
@@ -109,10 +112,11 @@ class Simulator:
         #
         # with open(f"synapses_{thread_idx}.pickle", "wb") as file:
         #     pickle.dump(self.synapses_params, file)
-
+        
+        #print("Simulation is starting ..., thread ", thread_idx)
         net = lib.Network(self.neurons_params, self.synapses_params, dt=self.dt)
         net.integrate(self.dt, self.Duration)
-        #print("###########################")
+        print("Simulation is finished, thread ", thread_idx)
         #time.sleep(10000)
 
         # Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
@@ -179,6 +183,7 @@ class Simulator:
 
         teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
         simulated_spike_rate, Erev_sum = self.run_model(X)
+        print("After run model")
 
         # fig, axes = plt.subplots()
         # cos_ref = 0.25*(np.cos(2*np.pi*t*0.001*self.theta_freq) + 1)
@@ -192,7 +197,9 @@ class Simulator:
         L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
 
         L += 0.001 * np.sum( (E_tot_t - Erev_sum)**2 )
-        # записать simulated_spike_rate, X, значение лосса - в hdf5
+        
+        
+        print("End loss")
         return L
 
 
@@ -206,6 +213,8 @@ def Loss(X, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params
 
 
 def callback(intermediate_result=None):
+    
+    print("Hello from callback!")
     with h5py.File("results.h5", "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
