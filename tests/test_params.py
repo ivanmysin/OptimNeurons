@@ -322,7 +322,7 @@ def main():
 
     sigma_t = sigma / animal_velocity * 1000
     E_tot_t = 40 * np.exp(  -0.5*(  (t - 0.5*t[-1])/ sigma_t )**2  )
-    Erev_tot = gE  / gtot
+    Erev_tot = gE  / (gtot + 0.000001)
     axes[2].plot(t, Erev_tot, label='Erev_tot')
     axes[2].plot(t, E_tot_t, label='Erev_tot')
 
