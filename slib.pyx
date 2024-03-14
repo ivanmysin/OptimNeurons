@@ -500,7 +500,8 @@ cdef class BaseSynapse:
         self.is_save_gsyn = is_save_gsyn
 
         if self.is_save_gsyn:
-            self.gsyn_hist = np.zeros_like(self.gmax).reshape(-1, 1)
+            #self.gsyn_hist = np.zeros_like(self.gmax).reshape(-1, 1)
+            self.gsyn_hist = np.zeros(4, dtype=np.float64).reshape(-1, 1)
 
     def set_presyn(self, presyn):
         self.presyn = presyn
@@ -540,7 +541,7 @@ cdef class PlasticSynapse(BaseSynapse):
         self.Mg0_b = np.asarray(params['Mg0']) / np.asarray(params['b'])
         self.a_nmda = np.asarray(params['a_nmda'])
         self.tau_rise_nmda = np.asarray(params['tau_rise_nmda'])
-        self.tau_decay_nmda = np.asarray(params['tau_rise_nmda'])
+        self.tau_decay_nmda = np.asarray(params['tau_decay_nmda'])
 
         self.gnmda = np.zeros_like(self.X)
         self.h_nmda = np.zeros_like(self.X)
@@ -555,14 +556,15 @@ cdef class PlasticSynapse(BaseSynapse):
         Vpost = self.postsyn.getV()
 
         # cooношение размерностей тут!!!
-        g_nmda = (self.gmax_nmda * self.gnmda).reshape(-1, 1) / (1.0 + np.exp(-self.a_nmda.reshape(-1, 1) * Vpost.reshape(1, -1) ) * self.Mg0_b.reshape(-1, 1) )
+        g_nmda = (self.gmax_nmda * self.gnmda).reshape(-1, 1) / (1.0 + np.exp(-self.a_nmda.reshape(-1, 1) * (Vpost.reshape(1, -1) - 65.0) ) * self.Mg0_b.reshape(-1, 1) )
 
         g_nmda_tot = np.sum(g_nmda, axis=0)
 
         gsyn = self.gmax * self.R
 
         if self.is_save_gsyn:
-            self.gsyn_hist = np.append(self.gsyn_hist, gsyn.reshape(-1, 1), axis=1)
+            #self.gsyn_hist = np.append(self.gsyn_hist, gsyn.reshape(-1, 1), axis=1)
+            self.gsyn_hist = np.append(self.gsyn_hist, g_nmda_tot.reshape(-1, 1), axis=1)
 
         #gsyn = np.reshape(gsyn, (-1, 1))
 
@@ -570,8 +572,8 @@ cdef class PlasticSynapse(BaseSynapse):
         #Itmp = gsyn * Vdiff
         #Isyn = np.sum(Itmp, axis=0)
 
-        gE = np.sum(gsyn * self.Erev) + np.sum( g_nmda_tot * self.Erev.reshape(-1, 1), axis=0)
-        gsyn_tot = np.sum(gsyn) + g_nmda_tot
+        gE = np.sum(gsyn * self.Erev) #+ np.sum( g_nmda_tot * self.Erev.reshape(-1, 1), axis=0)
+        gsyn_tot = np.sum(gsyn) #+ g_nmda_tot
         self.postsyn.addIsyn(gsyn_tot, gE)
         return
 
