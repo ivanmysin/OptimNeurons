@@ -20,10 +20,11 @@ from scipy.special import i0 as bessel_i0
 
 
 cdef class OriginFiring:
+    cdef double dt
     def __cinit__(self, params, dt=0.1):
-        pass
+        self.dt = dt
 
-    cpdef integrate(self, double dt, double duration):
+    cpdef integrate(self, int n_steps):
         pass
 
     def getCompartmentByName(self, name):
@@ -50,8 +51,11 @@ cdef class OriginCompartment(OriginFiring):
         self.g_tot += gsyn
         self.g_E += gE
 
-    cdef addIcoms(self, np.ndarray Icoms):
-        self.Icoms += Icoms
+    ##### cdef addIcoms(self, np.ndarray Icoms):
+    cdef addIcoms(self, g, gE):
+        #### self.Icoms += Icoms
+        self.g_tot += g
+        self.g_E += gE
 
 
     def getVhist(self):
@@ -82,19 +86,21 @@ cdef class OriginCompartment(OriginFiring):
 ####################
 cdef class PyramideCA1Compartment(OriginCompartment):
 
-    cdef np.ndarray Cm, ENa, EK, El, ECa, CCa, sfica, sbetaca
+    cdef np.ndarray Cm, ENa, EK, El, ECa, CCa, sfica, sbetaca, exp_sbetaca
     cdef np.ndarray gbarNa, gbarK_DR, gbarK_AHP, gbarK_C, gl, gbarCa
     cdef np.ndarray th
     cdef np.ndarray countSp
     cdef np.ndarray m, h, n, s, c, q
     cdef np.ndarray INa, IK_DR, IK_AHP, IK_C, ICa, Il
 
-    cdef double  Iextmean, Iextvarience,
+    cdef double  Iextmean, Iextvarience, sqrt_dt
     #cdef np.ndarray input_conduntance, conduntances_Erev
     #cdef int conduntance_counter
 
 
-    def __cinit__(self, params):
+    def __cinit__(self, params, dt=0.1):
+        self.dt = dt
+
         self.V = params["V0"]
         self.Cm = params["Cm"]
 
@@ -112,6 +118,8 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.CCa = params["CCa"]
         self.sfica = params["sfica"]
         self.sbetaca = params["sbetaca"]
+
+        self.exp_sbetaca = np.exp(-dt * self.sbetaca )
 
         self.gbarNa = params["gbarNa"]
         self.gbarK_DR = params["gbarK_DR"]
@@ -147,6 +155,8 @@ cdef class PyramideCA1Compartment(OriginCompartment):
         self.g_E = np.zeros_like(self.V)
 
         self.calculate_currents()
+
+        self.sqrt_dt = np.sqrt(self.dt)
 
 
 
@@ -264,70 +274,96 @@ cdef class PyramideCA1Compartment(OriginCompartment):
 
 
     cdef np.ndarray h_integrate(self, double dt):
-        cdef np.ndarray h_0 = self.alpha_h() / (self.alpha_h() + self.beta_h())
-        cdef np.ndarray tau_h = 1 / (self.alpha_h() + self.beta_h())
+        cdef np.ndarray alpha = self.alpha_h()
+        cdef np.ndarray beta = self.beta_h()
+        cdef np.ndarray tau_h = 1 / (alpha + beta)
+
+        cdef np.ndarray h_0 = alpha * tau_h
+
         return h_0 - (h_0 - self.h) * np.exp(-dt / tau_h)
 
 
     cdef np.ndarray n_integrate(self, double dt):
-        cdef np.ndarray n_0 = self.alpha_n() / (self.alpha_n() + self.beta_n() )
-        cdef np.ndarray tau_n = 1 / (self.alpha_n() + self.beta_n())
+
+        cdef np.ndarray alpha = self.alpha_n()
+        cdef np.ndarray beta = self.beta_n()
+        cdef np.ndarray tau_n = 1 / (alpha + beta)
+        cdef np.ndarray n_0 = alpha * tau_n
+
         return n_0 - (n_0 - self.n) * np.exp(-dt / tau_n)
 
     cdef np.ndarray s_integrate(self, double dt):
-        cdef np.ndarray s_0 = self.alpha_s() / (self.alpha_s() + self.beta_s() )
-        cdef np.ndarray tau_s = 1 / (self.alpha_s() + self.beta_s())
+        cdef np.ndarray alpha = self.alpha_s()
+        cdef np.ndarray beta = self.beta_s()
+
+        cdef np.ndarray tau_s = 1 / (alpha + beta)
+        cdef np.ndarray s_0 = alpha * tau_s
+
         return s_0 - (s_0 - self.s) * np.exp(-dt / tau_s)
 
     cdef np.ndarray c_integrate(self, double dt):
-        cdef np.ndarray c_0 = self.alpha_c() / (self.alpha_c() + self.beta_c() )
-        cdef np.ndarray tau_c = 1 / (self.alpha_c() + self.beta_c())
+        cdef np.ndarray alpha = self.alpha_c()
+        cdef np.ndarray beta = self.beta_c()
+
+        cdef np.ndarray tau_c = 1 / (alpha + beta)
+        cdef np.ndarray c_0 = alpha * tau_c
+
         return c_0 - (c_0 - self.c) * np.exp(-dt / tau_c)
 
     cdef np.ndarray q_integrate(self, double dt):
-        cdef np.ndarray q_0 = self.alpha_q() / (self.alpha_q() + self.beta_q() )
-        cdef np.ndarray tau_q = 1 / (self.alpha_q() + self.beta_q())
+        cdef np.ndarray alpha = self.alpha_q()
+        cdef double beta = self.beta_q()
+        cdef np.ndarray tau_q = 1 / (alpha + beta)
+
+        cdef np.ndarray q_0 = alpha * tau_q
+
         return q_0 - (q_0 - self.q) * np.exp(-dt / tau_q)
 
     cdef np.ndarray CCa_integrate(self, double dt):
-        cdef np.ndarray k1 = self.CCa
-        cdef np.ndarray k2 = k1 + 0.5 * dt * (self.sfica * self.ICa - self.sbetaca * k1)
-        cdef np.ndarray k3 = k2 + 0.5 * dt * (self.sfica * self.ICa - self.sbetaca * k2)
-        cdef np.ndarray k4 = k1 + dt * (self.sfica * self.ICa - self.sbetaca * k1)
-        return (k1 + 2*k2 + 2*k3 + k4) / 6
+        cdef np.ndarray CCa = self.CCa * self.exp_sbetaca + self.sfica * self.ICa
+        return CCa
 
-    cpdef integrate(self, double dt, double duration):
-        cdef double t = 0
+        #### cdef np.ndarray k1 = self.CCa
+        #### cdef np.ndarray k2 = k1 + 0.5 * dt * (self.sfica * self.ICa - self.sbetaca * k1)
+        #### cdef np.ndarray k3 = k2 + 0.5 * dt * (self.sfica * self.ICa - self.sbetaca * k2)
+        #### cdef np.ndarray k4 = k1 + dt * (self.sfica * self.ICa - self.sbetaca * k1)
 
-        while (t < duration):
+        #### return (k1 + 2*k2 + 2*k3 + k4) / 6
+
+    cpdef integrate(self, int n_steps):
+        #### cdef double t = 0
+
+        for _ in range(n_steps):
             self.Vhist = np.append(self.Vhist, self.V[0])
 
             self.countSp = self.V < self.th
             #I = self.Il + self.INa + self.IK_DR + self.IK_AHP + self.IK_C + self.ICa + self.Isyn + self.Icoms + self.Iext/np.sqrt(dt)
-            I = self.Icoms + self.Iext/np.sqrt(dt)
+            I = self.Iext/self.sqrt_dt
 
             tau_m = self.Cm / self.g_tot
             Vinf = self.g_E / self.g_tot
 
             #print(Vinf)
-            self.V = Vinf - (Vinf - self.V) * np.exp(-dt / tau_m)
+            self.V = Vinf - (Vinf - self.V) * np.exp(-self.dt / tau_m)
 
-            self.V += dt * I / self.Cm
+            self.V += self.dt * I / self.Cm
 
-            self.m = self.alpha_m() / (self.alpha_m() + self.beta_m())
-            self.h = self.h_integrate(dt)
-            self.n = self.n_integrate(dt)
-            self.s = self.s_integrate(dt)
-            self.c = self.c_integrate(dt)
-            self.q = self.q_integrate(dt)
-            self.CCa = self.CCa_integrate(dt)
+            alpha_m = self.alpha_m()
+            beta_m = self.beta_m()
+            self.m = alpha_m / (alpha_m + beta_m)
+            self.h = self.h_integrate(self.dt)
+            self.n = self.n_integrate(self.dt)
+            self.s = self.s_integrate(self.dt)
+            self.c = self.c_integrate(self.dt)
+            self.q = self.q_integrate(self.dt)
+            self.CCa = self.CCa_integrate(self.dt)
 
             self.calculate_currents()
 
 
             self.checkFired()
 
-            t += dt
+            #####  t += dt
 
 
     def checkFired(self):
@@ -338,20 +374,28 @@ cdef class PyramideCA1Compartment(OriginCompartment):
 cdef class IntercompartmentConnection:
     cdef OriginCompartment comp1
     cdef OriginCompartment comp2
-    cdef np.ndarray g, p
+    cdef np.ndarray g, p, g1, g2
     def __cinit__(self, OriginCompartment comp1, OriginCompartment comp2, np.ndarray g, np.ndarray p):
         self.comp1 = comp1
         self.comp2 = comp2
         self.g = g
         self.p = p
 
+        self.g1 = self.g / self.p
+        self.g2 = self.g/(1 - self.p)
+
     def activate(self):
 
-        cdef np.ndarray Icomp1 = (self.g / self.p) * (self.comp2.getV() - self.comp1.getV() )
-        cdef np.ndarray Icomp2 = (self.g/(1 - self.p)) * (self.comp1.getV() - self.comp2.getV())
+        #### cdef np.ndarray Icomp1 = self.g1 * (self.comp2.getV() - self.comp1.getV() )
+        #### cdef np.ndarray Icomp2 = self.g2 * (self.comp1.getV() - self.comp2.getV())
+        cdef np.ndarray E1 = self.comp2.getV()
+        cdef np.ndarray E2 = self.comp1.getV()
 
-        self.comp1.addIcoms(Icomp1)
-        self.comp2.addIcoms(Icomp2)
+        #### self.comp1.addIcoms(Icomp1)
+        #### self.comp2.addIcoms(Icomp2)
+
+        self.comp1.addIcoms(self.g1, self.g1*E1)
+        self.comp2.addIcoms(self.g2, self.g2*E2)
 
 cdef class ComplexNeuron:
     cdef dict compartments # map [string, OriginCompartment*] compartments
@@ -372,17 +416,16 @@ cdef class ComplexNeuron:
     def getCompartmentsNames(self):
         return self.compartments.keys()
 
-    def integrate(self, double dt, double duration):
-        cdef double t = 0
+    def integrate(self, int n_steps):
 
-        while(t < duration):
+        for _ in range(n_steps):
             for p in self.compartments.values():
-                p.integrate(dt, dt)
+                p.integrate(1)
 
             for c in self.connections:
                 c.activate()
 
-            t += dt
+
 
     def getCompartmentByName(self, name):
         return self.compartments[name]
@@ -390,7 +433,7 @@ cdef class ComplexNeuron:
 ################################################################################
 cdef class VonMissesGenerator(OriginFiring):
     cdef np.ndarray kappa, mult4time, phases, normalizator
-    cdef double dt, t
+    cdef double t
 
     def __cinit__(self, params, dt=0.1):
         self.dt = dt
@@ -445,8 +488,8 @@ cdef class VonMissesGenerator(OriginFiring):
         self.t += self.dt
         return firings
 
-    def integrate(self, dt, duration):
-        self.t += dt
+    def integrate(self, n_steps):
+        self.t += n_steps * self.dt
 
 cdef class VonMissesSpatialMolulation(VonMissesGenerator):
     cdef np.ndarray Amps, sigma_t, t_centers
@@ -502,6 +545,7 @@ cdef class BaseSynapse:
         if self.is_save_gsyn:
             self.gsyn_hist = np.zeros_like(self.gmax).reshape(-1, 1)
 
+
     def set_presyn(self, presyn):
         self.presyn = presyn
 
@@ -514,6 +558,7 @@ cdef class BaseSynapse:
 cdef class PlasticSynapse(BaseSynapse):
     cdef np.ndarray tau1r, tau_d, tau_r, tau_f, Uinc, X, U, R
     cdef np.ndarray Mg0_b, a_nmda, tau_rise_nmda, tau_decay_nmda, gmax_nmda, h_nmda, gnmda
+    cdef np.ndarray exp_tau_d, exp_tau_f, exp_tau_r, exp_tau_rise_nmda, exp_tau_decay_nmda
 
     def __cinit__(self, params, dt=0.1, is_save_gsyn=False):
         self.dt = dt
@@ -532,6 +577,10 @@ cdef class PlasticSynapse(BaseSynapse):
 
         self.tau1r = np.where(self.tau_d != self.tau_r,  self.tau_d / (self.tau_d - self.tau_r), 1e-13)
 
+        self.exp_tau_d = np.exp(-self.dt / self.tau_d)
+        self.exp_tau_r = np.exp(-self.dt / self.tau_r)
+        self.exp_tau_f = np.exp(-self.dt / self.tau_f)
+
         self.X = np.ones_like(self.gmax)   #(len(params), dtype=np.float64)
         self.U = np.zeros_like(self.X)
         self.R = np.zeros_like(self.X)
@@ -540,7 +589,10 @@ cdef class PlasticSynapse(BaseSynapse):
         self.Mg0_b = np.asarray(params['Mg0']) / np.asarray(params['b'])
         self.a_nmda = np.asarray(params['a_nmda'])
         self.tau_rise_nmda = np.asarray(params['tau_rise_nmda'])
-        self.tau_decay_nmda = np.asarray(params['tau_rise_nmda'])
+        self.tau_decay_nmda = np.asarray(params['tau_decay_nmda'])
+
+        self.exp_tau_rise_nmda = np.exp(-dt / self.tau_rise_nmda )
+        self.exp_tau_decay_nmda = np.exp(-dt / self.tau_decay_nmda)
 
         self.gnmda = np.zeros_like(self.X)
         self.h_nmda = np.zeros_like(self.X)
@@ -554,44 +606,45 @@ cdef class PlasticSynapse(BaseSynapse):
     def add_Isyn2Post(self):
         Vpost = self.postsyn.getV()
 
-        # cooношение размерностей тут!!!
-        g_nmda = (self.gmax_nmda * self.gnmda).reshape(-1, 1) / (1.0 + np.exp(-self.a_nmda.reshape(-1, 1) * Vpost.reshape(1, -1) ) * self.Mg0_b.reshape(-1, 1) )
 
-        g_nmda_tot = np.sum(g_nmda, axis=0)
+        g_nmda = (self.gmax_nmda * self.gnmda).reshape(-1, 1) / (1.0 + np.exp(-self.a_nmda.reshape(-1, 1) * (Vpost.reshape(1, -1) - 65.0) ) * self.Mg0_b.reshape(-1, 1) )
 
         gsyn = self.gmax * self.R
 
         if self.is_save_gsyn:
-            self.gsyn_hist = np.append(self.gsyn_hist, gsyn.reshape(-1, 1), axis=1)
+            mean_g_nmda = np.mean(g_nmda, axis=1) # average over all post synaptic neurons
 
-        #gsyn = np.reshape(gsyn, (-1, 1))
+            gsyn_sum = gsyn + mean_g_nmda
+            self.gsyn_hist = np.append(self.gsyn_hist, gsyn_sum.reshape(-1, 1), axis=1)
 
-        #Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
-        #Itmp = gsyn * Vdiff
-        #Isyn = np.sum(Itmp, axis=0)
+        #### gsyn = np.reshape(gsyn, (-1, 1))
+        #### Vdiff = self.Erev - np.reshape(Vpost, (1, -1))
+        #### Itmp = gsyn * Vdiff
+        #### Isyn = np.sum(Itmp, axis=0)
 
+        #### g_nmda_tot = np.sum(g_nmda, axis=0)
         gE = np.sum(gsyn * self.Erev) + np.sum( g_nmda * self.Erev.reshape(-1, 1), axis=0)
-        gsyn_tot = np.sum(gsyn) + g_nmda_tot
+        gsyn_tot = np.sum(gsyn) + np.sum(g_nmda, axis=0)
         self.postsyn.addIsyn(gsyn_tot, gE)
         return
 
-    def integrate(self, dt):
+    def integrate(self):
         SRpre = self.presyn.get_firing()
         Spre_normed = SRpre * self.pconn
 
-        y_ = self.R * np.exp(-dt / self.tau_d)
+        y_ = self.R * self.exp_tau_d  ### np.exp(-self.dt / self.tau_d)
 
-        x_ = 1 + (self.X - 1 + self.tau1r * self.U) * np.exp(-dt / self.tau_r) - self.tau1r * self.U
+        x_ = 1 + (self.X - 1 + self.tau1r * self.U) * self.exp_tau_r - self.tau1r * self.U   # np.exp(-self.dt / self.tau_r)
 
-        u_ = self.U * np.exp(-dt / self.tau_f)
+        u_ = self.U * self.exp_tau_f  ## np.exp(-self.dt / self.tau_f)
 
         released_mediator = self.U * x_ * Spre_normed
         self.U = u_ + self.Uinc * (1 - u_) * Spre_normed
         self.R = y_ + released_mediator
         self.X = x_ - released_mediator
 
-        self.h_nmda = self.h_nmda * np.exp(-dt / self.tau_rise_nmda) + released_mediator
-        self.gnmda = self.gnmda * np.exp(-dt / self.tau_decay_nmda) + self.h_nmda
+        self.h_nmda = self.h_nmda * self.exp_tau_rise_nmda + released_mediator  ###np.exp(-self.dt / self.tau_rise_nmda)
+        self.gnmda = self.gnmda * self.exp_tau_decay_nmda + self.h_nmda    ### np.exp(-self.dt / self.tau_decay_nmda)
         self.add_Isyn2Post()
         return
 ################################################################################################
@@ -599,9 +652,10 @@ cdef class Network:
     cdef list neurons
     cdef list synapses
     #cdef list neuron_params, synapse_params
-    cdef double t
+    cdef double dt, t
 
     def __cinit__(self, neuron_params, synapse_params, dt=0.1):
+        self.dt = dt
         self.neurons = list()
         self.synapses = list()
 
@@ -621,22 +675,23 @@ cdef class Network:
             self.synapses.append(synapse)
 
 
-    def integrate(self, double dt, double duration):
+    def integrate(self, int n_steps):
         cdef int NN = len(self.neurons)
         cdef int NS = len(self.synapses)
         cdef int s_ind = 0
         cdef int neuron_ind = 0
         cdef double t = 0
-        while(t < duration):
+
+        for _ in range(n_steps):
             for neuron_ind in range(NN):
                 #print(neuron_ind)
-                self.neurons[neuron_ind].integrate(dt, dt)
+                self.neurons[neuron_ind].integrate(1)
 
             for s_ind in range(NS):
-                self.synapses[s_ind].integrate(dt)
+                self.synapses[s_ind].integrate()
 
-            t += dt
-            self.t += dt
+            t += self.dt
+            self.t += self.dt
 
     def get_neuron_by_idx(self, idx):
         return self.neurons[idx]

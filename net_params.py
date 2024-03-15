@@ -150,7 +150,7 @@ theta_spatial_generators_dend = {
 }
 
 ######################################################################
-NN = 100 # number of neurons
+NN = 4 # number of neurons
 neuron_params = {
     "class" : "ComplexNeuron",
     "name"  : "ca1pyr",
@@ -222,12 +222,12 @@ synapses_params = [
                 "Erev" : 60.0,
                 "pconn" : 0.01,
 
-                'gmax_nmda' : 0.0001 * 159341 * 0.1310724564,
+                'gmax_nmda' : 1.0,  #0.0001 * 159341 * 0.1310724564,
                 'Mg0' : 1.0,
                 'b' : 3.57,
                 'a_nmda' : 0.062,
                 'tau_rise_nmda' : 2.0,
-                'tau_rise_nmda' : 89.0,
+                'tau_decay_nmda' : 89.0,
             },
         ],
     },
@@ -247,12 +247,12 @@ synapses_params = [
                 "Erev": 60.0,
                 "pconn": 0.1,
 
-                'gmax_nmda': 0.0001 * 159341 * 0.1310724564,
+                'gmax_nmda': 0.0,# 0.1310724564,  # 0.0001 * 159341 *
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
         ],
     },
@@ -272,12 +272,12 @@ synapses_params = [
                 "Erev": 60.0,
                 "pconn": 0.016, #0.16,
 
-                'gmax_nmda': 0.0001 *  75376 * 1.021220696,
+                'gmax_nmda': 0.0, #0.0001 *  75376 * 1.021220696,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             { # PV bas to pyr connection
                 "gmax"  : 336 * 6.067811614,
@@ -293,7 +293,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             { # CCK bas to pyr connection
                 "gmax"  : 395 * 1.633849863,
@@ -309,7 +309,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             { # Axo-Axonic cell to pyr connection
                 "gmax"  : 312 * 3.059027201,
@@ -325,7 +325,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             { #CA1 Bistratified (-)0333
                 "gmax"  : 804 * 1.4388733,
@@ -341,7 +341,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
         ],
     },
@@ -361,12 +361,12 @@ synapses_params = [
                 "Erev"  : 60.0,
                 "pconn" : 0.1, #0.008,
 
-                'gmax_nmda':  0.00001 * 22784 * 1.369309873,
+                'gmax_nmda':  0.0, #0.00001 * 22784 * 1.369309873,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             { # CA1 Ivy (-)0333
                 "gmax"  : 778 * 1.372446563,
@@ -382,7 +382,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             {   # CA1 Neurogliaform (-)3000
                 "gmax": 1114 * 1.645016607,
@@ -398,7 +398,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
             {  # CA1 O-LM (-)1002
                 "gmax"  : 521 * 1.645016607,
@@ -414,7 +414,7 @@ synapses_params = [
                 'b': 3.57,
                 'a_nmda': 0.062,
                 'tau_rise_nmda': 2.0,
-                'tau_rise_nmda': 89.0,
+                'tau_decay_nmda': 89.0,
             },
         ]
     },

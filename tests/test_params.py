@@ -288,7 +288,8 @@ def main():
 
     net = lib.Network(neurons_params, synapses_params, dt=dt)
 
-    net.integrate(dt, Duration)
+    n_steps = int(Duration/dt)
+    net.integrate(n_steps)
 
     Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
     Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
@@ -320,11 +321,13 @@ def main():
         gtot += np.sum(gsyn[:, 1:], axis=0)
         gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
+
+
     sigma_t = sigma / animal_velocity * 1000
     E_tot_t = 40 * np.exp(  -0.5*(  (t - 0.5*t[-1])/ sigma_t )**2  )
     Erev_tot = gE  / (gtot + 0.000001)
-    axes[2].plot(t, Erev_tot, label='Erev_tot')
-    axes[2].plot(t, E_tot_t, label='Erev_tot')
+    axes[2].plot(t, Erev_tot, label='Erev_target')
+    axes[2].plot(t, E_tot_t, label='Erev synapses')
 
     #axes[syn_idx].set_title(synapse["pre_idx"])
 
