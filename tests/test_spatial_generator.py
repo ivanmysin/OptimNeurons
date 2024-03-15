@@ -10,7 +10,7 @@ from scipy.special import i0 as bessel_i0
 dt = 0.1
 V_AN = pr.V_AN
 SLOPE = np.deg2rad( pr.default_param4optimization['precession_slope'] * pr.V_AN * 0.001) # rad / ms
-
+ONSET = np.deg2rad( pr.default_param4optimization['precession_onset'] )
 
 
 def r2kappa(R):
@@ -33,7 +33,7 @@ params_generators = pr.theta_generators
 params_generators["class"] = getattr(lib, params_generators["class"])
 
 meanSR = params_generators['params'][0]["mean_spike_rate"]
-phases = params_generators['params'][0]["phase"]
+phase = params_generators['params'][0]["phase"]
 kappa = r2kappa(params_generators['params'][0]["R"])
 mult4time = 2 * np.pi * params_generators['params'][0]["freq"] * 0.001
 
@@ -60,19 +60,27 @@ multip = (1 + amp * np.exp( -0.5 * ((t - tc) / sigma_spt)**2))
 
 
 
-onset = 0.0
+
 #precession = 0.001 * t * slope * 8
 
-precession = SLOPE * t * ( np.abs(t - tc) < 3*sigma_spt)   #(multip > 2.5*meanSR)
-plt.plot(t, precession)
-plt.show()
-firings = normalizator * np.exp(kappa * np.cos(mult4time * t + precession - phases - onset) )
+ALPHA = 5.0
+inplace = 0.25 *(1.0 - ( (t - tc - 3*sigma_spt) / (ALPHA + np.abs(t - tc - 3*sigma_spt)))) * (1.0 + (t - tc + 3*sigma_spt) / (ALPHA + np.abs(t - tc + 3*sigma_spt)))
+
+# plt.plot(t, inplace)
+# plt.show()
+
+precession = SLOPE * t * inplace  #( np.abs(t - tc) < 3*sigma_spt)   #(multip > 2.5*meanSR)
+phases = phase * (1 - inplace) - ONSET * inplace #
+#phases[ np.abs(t - tc) < 3*sigma_spt ] = ONSET
+
+
+firings = normalizator * np.exp(kappa * np.cos(mult4time * t + precession - phases) )
 
 firings = firings / (0.001 * dt)
 firing_sp = multip * firings
 
 
-cos_ref = 1.5*(np.cos(2*np.pi*t*params_generators['params'][0]["freq"] * 0.001) + 1)
+cos_ref = 1.2*(np.cos(2*np.pi*t*params_generators['params'][0]["freq"] * 0.001) + 1)
 plt.plot(t, cos_ref, color="green", linewidth=0.5)
 plt.plot(t, firing_sp, color="blue", linewidth=2)
 
