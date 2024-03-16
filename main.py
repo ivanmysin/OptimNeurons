@@ -137,7 +137,7 @@ class Simulator:
             gtot += np.sum(gsyn[:, 1:], axis=0)
             gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
-        Erev_sum = gE / gtot
+        Erev_sum = gE / (gtot + 0.000001)
 
 
         return firing, Erev_sum
@@ -211,7 +211,7 @@ class Simulator:
         teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
         simulated_spike_rate, Erev_sum = self.run_model(X)
 
-        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) - 5.0
+        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
         L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
         L += np.sum( (E_tot_t - Erev_sum)**2 )
         
