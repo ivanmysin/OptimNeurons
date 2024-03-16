@@ -197,17 +197,18 @@ class Simulator:
 
     def loss(self, X):
         ################ Parameters for teor_spike_rate ##################
-        kappa = self.r2kappa(self.Rpc)
-        slope = self.animal_velocity * np.deg2rad(self.slope)
+        # kappa = self.r2kappa(self.Rpc)
+        # slope = self.animal_velocity * np.deg2rad(self.slope)
         ################ Parameters for teor_spike_rate ##################
 
         t = np.arange(0, self.Duration, self.dt)
         center = 0.5*self.Duration
 
-        sigma = self.sigma / self.animal_velocity * 1000
+        #sigma = self.sigma / self.animal_velocity * 1000
 
 
-        teor_spike_rate = self.get_teor_spike_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
+
+        teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
         simulated_spike_rate, Erev_sum = self.run_model(X)
 
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) - 5.0
