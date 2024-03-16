@@ -204,7 +204,7 @@ class Simulator:
         t = np.arange(0, self.Duration, self.dt)
         center = 0.5*self.Duration
 
-        #sigma = self.sigma / self.animal_velocity * 1000
+        sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
 
 
 
