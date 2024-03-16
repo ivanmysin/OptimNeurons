@@ -216,7 +216,7 @@ class Simulator:
         L += np.sum( (E_tot_t - Erev_sum)**2 )
         
         
-        print("End loss")
+        #print("End loss")
         return L
 
 
@@ -306,7 +306,7 @@ def main():
     timer = time.time()
     print('starting optimization ... ')
 
-    sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
+    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
                                  mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
                                  args = args )
