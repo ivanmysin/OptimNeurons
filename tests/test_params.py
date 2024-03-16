@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import differential_evolution
 from scipy.signal.windows import parzen
+from scipy.special import i0 as bessel_i0
 import time
 import h5py
 from pprint import pprint
@@ -126,38 +127,61 @@ class Simulator:
         # kappa = np.where(R >= 0.85,  1 / (3 * R - 4 * R ** 2 + R ** 3), kappa)
         return kappa
 
-    def get_teor_spike_rate(self, t, slope, theta_freq, kappa, sigma=1, center=0):
-        teor_spike_rate = np.exp(-0.5 * ((t - center) / sigma) ** 2)
-        precession = 0.001 * t * slope
+    def get_target_firing_rate(self, t, tc, dt, theta_freq, v_an, params):
 
-        phi0 = -2 * np.pi * theta_freq * 0.001 * center - np.pi - precession[np.argmax(teor_spike_rate)]
-        teor_spike_rate *= np.exp(kappa * np.cos(2 * np.pi * theta_freq * t * 0.001 + precession + phi0))
+        meanSR = params['mean_firing_rate']
+        phase = np.deg2rad(params['phase_out_place'])
+        kappa = self.r2kappa(params["R_place_cell"])
 
-        teor_spike_rate *= 0.001  # !!!!!!
-        return teor_spike_rate
+        SLOPE = np.deg2rad(params['precession_slope'] * v_an * 0.001)  # rad / ms
+        ONSET = np.deg2rad(params['precession_onset'])
+        ALPHA = 5.0
+
+        mult4time = 2 * np.pi * theta_freq * 0.001
+
+        I0 = bessel_i0(kappa)
+        normalizator = meanSR / I0 * 0.001 * dt
+
+        maxFiring = 25.0
+        amp = 2 * (maxFiring - meanSR) / (meanSR + 1)  # maxFiring / meanSR - 1 #  range [-1, inf]
+        sigma_spt = 250
+
+        # print(meanSR)
+        multip = (1 + amp * np.exp(-0.5 * ((t - tc) / sigma_spt) ** 2))
+
+        start_place = t - tc - 3 * sigma_spt
+        end_place = t - tc + 3 * sigma_spt
+        inplace = 0.25 * (1.0 - (start_place / (ALPHA + np.abs(start_place)))) * (
+                    1.0 + end_place / (ALPHA + np.abs(end_place)))
+
+        precession = SLOPE * t * inplace
+        phases = phase * (1 - inplace) - ONSET * inplace
+
+        firings = normalizator * np.exp(kappa * np.cos(mult4time * t + precession - phases))
+
+        firing_sp = multip * firings  # / (0.001 * dt)
+
+        return firing_sp
 
     def loss(self, X):
         ################ Parameters for teor_spike_rate ##################
         kappa = self.r2kappa(self.Rpc)
         slope = self.animal_velocity * np.deg2rad(self.slope)
+        sigma = self.sigma / self.animal_velocity * 1000
         ################ Parameters for teor_spike_rate ##################
 
         t = np.arange(0, self.Duration, self.dt)
         center = 0.5 * self.Duration
 
-        sigma = self.sigma / self.animal_velocity * 1000
 
-        teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
+
+        #teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
+
+        teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, theta_freq, self.animal_velocity, params)
         simulated_spike_rate = self.run_model(X)
 
-        # fig, axes = plt.subplots()
-        # cos_ref = 0.25*(np.cos(2*np.pi*t*0.001*self.theta_freq) + 1)
-        # axes.plot(t, teor_spike_rate, color='red', label="Target firing rate")
-        # axes.plot(t, cos_ref, linestyle='dashed')
-        # plt.show()
-
         L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
-        # записать simulated_spike_rate, X, значение лосса - в hdf5
+
         return L
 
 
@@ -316,6 +340,8 @@ def main():
 
     #fig, axes = plt.subplots(nrows=len(synapses_params))
     for syn_idx, synapse in enumerate(synapses_params):
+        if synapse['target_compartment'] == 'dendrite':
+            continue
         gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
 
         gtot += np.sum(gsyn[:, 1:], axis=0)
@@ -324,7 +350,7 @@ def main():
 
 
     sigma_t = sigma / animal_velocity * 1000
-    E_tot_t = 40 * np.exp(  -0.5*(  (t - 0.5*t[-1])/ sigma_t )**2  )
+    E_tot_t = 40 * np.exp(  -0.5*(  (t - 0.5*t[-1])/ sigma_t )**2  ) - 5.0
     Erev_tot = gE  / (gtot + 0.000001)
     axes[2].plot(t, Erev_tot, label='Erev_target')
     axes[2].plot(t, E_tot_t, label='Erev synapses')

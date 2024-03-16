@@ -1,13 +1,16 @@
 import numpy as np
 
-THETA_FREQ = 5.0 # Частота тета-ритма, Гц
-V_AN = 20        # Скорость бега животного, cm/sec
+THETA_FREQ = 6.0 # Частота тета-ритма, Гц
+V_AN = 10        # Скорость бега животного, cm/sec
 
 
 default_param4optimization = {
-    "precession_slope" : 5.0,
-    "sigma_place_field" : 4.0,
-    "R_place_cell" : 0.5,
+    "precession_slope" : 5.0, # cm/sec
+    "precession_onset": 250.0, # deg
+    "sigma_place_field" : 4.0, # cm
+    "R_place_cell" : 0.2,
+    "phase_out_place" : 180, # deg
+    "mean_firing_rate" : 0.5, # spikes / sec
 
 }
 
@@ -220,9 +223,9 @@ synapses_params = [
                 "tau_f" : 19.0939326,
                 "Uinc"  : 0.220334906,
                 "Erev" : 60.0,
-                "pconn" : 0.01,
+                "pconn" : 0.001,
 
-                'gmax_nmda' : 1.0,  #0.0001 * 159341 * 0.1310724564,
+                'gmax_nmda' : 10e4,  #0.0001 * 159341 * 0.1310724564,
                 'Mg0' : 1.0,
                 'b' : 3.57,
                 'a_nmda' : 0.062,
@@ -247,7 +250,7 @@ synapses_params = [
                 "Erev": 60.0,
                 "pconn": 0.1,
 
-                'gmax_nmda': 0.0,# 0.1310724564,  # 0.0001 * 159341 *
+                'gmax_nmda': 10e4,# 0.1310724564,  # 0.0001 * 159341 *
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
@@ -270,9 +273,9 @@ synapses_params = [
                 "tau_f": 18.01005789,
                 "Uinc": 0.201847939,
                 "Erev": 60.0,
-                "pconn": 0.016, #0.16,
+                "pconn": 0.01, #0.16,
 
-                'gmax_nmda': 0.0, #0.0001 *  75376 * 1.021220696,
+                'gmax_nmda': 10e4, #0.0001 *  75376 * 1.021220696,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
@@ -286,7 +289,7 @@ synapses_params = [
                 "tau_f" : 11.57699627,
                 "Uinc"  : 0.282768383,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, # 0.006,
+                "pconn" : 1.0, # 0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -302,7 +305,7 @@ synapses_params = [
                 "tau_f" : 55.80256764,
                 "Uinc"  : 0.230934787,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, #0.006,
+                "pconn" : 1.0, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -318,7 +321,7 @@ synapses_params = [
                 "tau_f" : 8.885170901,
                 "Uinc"  : 0.303356703,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, #0.006,
+                "pconn" : 1.0, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -334,7 +337,7 @@ synapses_params = [
                 "tau_f" : 9.208561312,
                 "Uinc"  : 0.280258327,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, #0.007,
+                "pconn" : 1.0, #0.007,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -359,9 +362,9 @@ synapses_params = [
                 "tau_f" : 21.84321492,
                 "Uinc"  : 0.236507156,
                 "Erev"  : 60.0,
-                "pconn" : 0.1, #0.008,
+                "pconn" : 0.01, #0.008,
 
-                'gmax_nmda':  0.0, #0.00001 * 22784 * 1.369309873,
+                'gmax_nmda':  10e4, #0.00001 * 22784 * 1.369309873,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
@@ -375,7 +378,7 @@ synapses_params = [
                 "tau_f" : 11.0166117,
                 "Uinc"  : 0.263139955,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, #0.006,
+                "pconn" : 1.0, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -391,7 +394,7 @@ synapses_params = [
                 "tau_f": 12.28169848,
                 "Uinc": 0.233093825,
                 "Erev": -15.0,
-                "pconn": 0.1, #0.002,
+                "pconn": 1.0, #0.002,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -407,7 +410,7 @@ synapses_params = [
                 "tau_f" : 12.28169848,
                 "Uinc"  : 0.233093825,
                 "Erev"  : -15.0,
-                "pconn" : 0.1, #0.002,
+                "pconn" : 1.0, #0.002,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
