@@ -311,7 +311,7 @@ def main():
     sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
                                  mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 args = args )
+                                 polish=False, args = args )
 
     print("Time of optimization ", time.time() - timer, " sec")
     print("success ", sol.success)
