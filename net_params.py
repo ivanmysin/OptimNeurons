@@ -153,7 +153,7 @@ theta_spatial_generators_dend = {
 }
 
 ######################################################################
-NN = 4 # number of neurons
+NN = 100 # number of neurons
 neuron_params = {
     "class" : "ComplexNeuron",
     "name"  : "ca1pyr",
