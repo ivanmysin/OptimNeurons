@@ -233,12 +233,12 @@ def Loss(X, dt, duration, animal_velocity, theta_freq, target_params, params):
 
 def callback(intermediate_result=None):
     
-    print("Hello from callback!")
+    #print("Hello from callback!")
     with h5py.File("results.h5", "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
 
-
+    return False
 
 def main():
     dt = 0.1 # ms
@@ -311,7 +311,7 @@ def main():
     sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
                                  mutation=0.2, bounds=bounds, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=False, args = args )  # callback=callback,
+                                 polish=True, args = args, callback=callback)
 
     #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
     callback(sol)

@@ -3,27 +3,24 @@ from scipy.optimize import differential_evolution
 import scipy
 COUNTER = 0
 def callback(intermediate_result=None):
-    pass
     #print(intermediate_result.fun)
     #print(intermediate_result.x)
 
-    return True
+    return False
 def loss(X):
     global COUNTER
     COUNTER += 1
-    l = np.sum(X)
-    #print('Loss')
+    l = np.sum(X**2, axis=0)
+
     return l
 
-bounds = [[0, 1] for _ in range(42)]
+bounds = [[-100, 100] for _ in range(42)]
 
 
-# res = differential_evolution(loss, bounds=bounds, workers=1, popsize=32, \
-#                              x0=np.random.rand(42), callback=callback, \
-#                              disp=True, polish=True, atol=10e-8,
-#                              mutation=1.5, recombination=0.2, maxiter=10)
+res = differential_evolution(loss, bounds=bounds, disp=True, x0=np.random.rand(42), mutation=0.2, polish=True, \
+                                workers=1, recombination=0.2, popsize=32, callback=callback, maxiter=1000, atol=10e-3)
 
-res = scipy.optimize.minimize(loss, bounds=bounds, x0=np.random.rand(42), method='L-BFGS-B')
+#res = scipy.optimize.minimize(loss, bounds=bounds, x0=np.random.rand(42), method='L-BFGS-B')
 
 print(res.x)
 print(COUNTER)
