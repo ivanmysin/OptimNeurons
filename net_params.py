@@ -6,6 +6,7 @@ V_AN = 20        # Скорость бега животного, cm/sec
 
 default_param4optimization = {
     "precession_slope" : 5.0,
+    "precession_onset" : 200,
     "sigma_place_field" : 4.0,
     "R_place_cell" : 0.5,
 
