@@ -4,8 +4,9 @@ import numpy as np
 import slib as lib
 import net_params as pr
 import matplotlib.pyplot as plt
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from scipy.signal.windows import parzen
+from scipy.special import i0 as bessel_i0
 import time
 import h5py
 from pprint import pprint
@@ -16,14 +17,15 @@ import multiprocessing
 import pickle
 
 class Simulator:
-    def __init__(self, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params):
+    def __init__(self, dt, duration, animal_velocity, theta_freq, target_params,  params):
         self.Duration = duration # ms 5000
         self.dt = dt
-        self.slope = slope
         self.animal_velocity = animal_velocity
         self.theta_freq = theta_freq
-        self.Rpc = Rpc
-        self.sigma = sigma
+        self.target_params = target_params
+
+
+
 
         neurons_params = deepcopy(params["neurons"])
         neurons_idx_by_names = {}
@@ -75,8 +77,6 @@ class Simulator:
 
         x_idx = 0
 
-        #print( self.neurons_params[0]["params"][0]["maxFiring"] )
-
         for i in range(len(self.neurons_params)):
             try:
                 for j in range(len(self.neurons_params[i]["params"])):
@@ -99,26 +99,23 @@ class Simulator:
              for syn_idx in range(synapse_type["gmax"].size):
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
-        
+
+        # Устанавливаем NMDA проводимости
+        for synapse_type in self.synapses_params:
+             for syn_idx in range(synapse_type["gmax_nmda"].size):
+                 if synapse_type["gmax_nmda"][syn_idx] == 0: continue
+                 synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
+                 x_idx += 1
+
+
         try:
             thread_idx = int(multiprocessing.current_process()._identity[0])
         except IndexError:
             thread_idx = 0
-        #print(thread_idx)
-        #pprint(self.neurons_params)
-
-        # with open(f"neurons_{thread_idx}.pickle", "wb") as file:
-        #     pickle.dump(self.neurons_params, file)
-        #
-        # with open(f"synapses_{thread_idx}.pickle", "wb") as file:
-        #     pickle.dump(self.synapses_params, file)
-        
-        #print("Simulation is starting ..., thread ", thread_idx)
         net = lib.Network(self.neurons_params, self.synapses_params, dt=self.dt)
-        net.integrate(self.dt, self.Duration)
-        print("Simulation is finished, thread ", thread_idx)
-        #time.sleep(10000)
 
+        N_steps = int(self.Duration/self.dt)
+        net.integrate(N_steps)
         # Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
         # Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
 
@@ -133,12 +130,14 @@ class Simulator:
         gtot = 0.0
 
         for syn_idx, synapse in enumerate(self.synapses_params):
+            if synapse['target_compartment'] == 'dendrite':
+                continue
             gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
 
             gtot += np.sum(gsyn[:, 1:], axis=0)
             gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
-        Erev_sum = gE / gtot
+        Erev_sum = gE / (gtot + 0.000001)
 
 
         return firing, Erev_sum
@@ -160,52 +159,72 @@ class Simulator:
         # kappa = np.where(R >= 0.85,  1 / (3 * R - 4 * R ** 2 + R ** 3), kappa)
         return kappa
 
-    def get_teor_spike_rate(self, t, slope, theta_freq, kappa, sigma=1, center=0):
-        teor_spike_rate = np.exp(-0.5 * ((t - center) / sigma) ** 2)
-        precession = 0.001 * t * slope
+    def get_target_firing_rate(self, t, tc, dt, theta_freq, v_an, params):
 
-        phi0 = -2 * np.pi * theta_freq * 0.001 * center - np.pi - precession[np.argmax(teor_spike_rate)]
-        teor_spike_rate *= np.exp(kappa * np.cos(2 * np.pi * theta_freq * t * 0.001 + precession + phi0))
+        meanSR = params['mean_firing_rate']
+        phase = np.deg2rad(params['phase_out_place'])
+        kappa = self.r2kappa(params["R_place_cell"])
 
-        teor_spike_rate *= 0.001 # !!!!!!
-        return teor_spike_rate
+        SLOPE = np.deg2rad(params['precession_slope'] * v_an * 0.001)  # rad / ms
+        ONSET = np.deg2rad(params['precession_onset'])
+        ALPHA = 5.0
+
+        mult4time = 2 * np.pi * theta_freq * 0.001
+
+        I0 = bessel_i0(kappa)
+        normalizator = meanSR / I0 * 0.001 * dt
+
+        maxFiring = 25.0
+        amp = 2 * (maxFiring - meanSR) / (meanSR + 1)  # maxFiring / meanSR - 1 #  range [-1, inf]
+        sigma_spt = 250
+
+        # print(meanSR)
+        multip = (1 + amp * np.exp(-0.5 * ((t - tc) / sigma_spt) ** 2))
+
+        start_place = t - tc - 3 * sigma_spt
+        end_place = t - tc + 3 * sigma_spt
+        inplace = 0.25 * (1.0 - (start_place / (ALPHA + np.abs(start_place)))) * (
+                    1.0 + end_place / (ALPHA + np.abs(end_place)))
+
+        precession = SLOPE * t * inplace
+        phases = phase * (1 - inplace) - ONSET * inplace
+
+        firings = normalizator * np.exp(kappa * np.cos(mult4time * t + precession - phases))
+
+        firing_sp = multip * firings  # / (0.001 * dt)
+
+        return firing_sp
 
     def loss(self, X):
         ################ Parameters for teor_spike_rate ##################
-        kappa = self.r2kappa(self.Rpc)
-        slope = self.animal_velocity * np.deg2rad(self.slope)
+        # kappa = self.r2kappa(self.Rpc)
+        # slope = self.animal_velocity * np.deg2rad(self.slope)
         ################ Parameters for teor_spike_rate ##################
 
         t = np.arange(0, self.Duration, self.dt)
         center = 0.5*self.Duration
 
-        sigma = self.sigma / self.animal_velocity * 1000
+        sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
 
-        teor_spike_rate = self.get_teor_spike_rate(t, slope, self.theta_freq, kappa, sigma=sigma, center=center)
+
+
+        teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
         simulated_spike_rate, Erev_sum = self.run_model(X)
-        print("After run model")
 
-        # fig, axes = plt.subplots()
-        # cos_ref = 0.25*(np.cos(2*np.pi*t*0.001*self.theta_freq) + 1)
-        # axes.plot(t, teor_spike_rate, color='red', label="Target firing rate")
-        # axes.plot(t, cos_ref, linestyle='dashed')
-        # plt.show()
+        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
+        L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
 
-
-        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2)
-
-        L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
-
-        L += 0.001 * np.sum( (E_tot_t - Erev_sum)**2 )
+        k = 0.01
+        L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         
         
-        print("End loss")
+        #print("End loss")
         return L
 
 
-def Loss(X, dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params):
+def Loss(X, dt, duration, animal_velocity, theta_freq, target_params, params):
 
-    s = Simulator(dt, duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
+    s = Simulator(dt, duration, animal_velocity, theta_freq, target_params, params)
 
     loss = s.loss(X)
 
@@ -227,12 +246,12 @@ def main():
 
     Rpc = pr.default_param4optimization["R_place_cell"]
     theta_freq = pr.THETA_FREQ  # 5 Hz
-    slope = pr.default_param4optimization["precession_slope"]  # deg/cm
+    target_params = pr.default_param4optimization  # deg/cm
     animal_velocity = pr.V_AN  # cm/sec
-    sigma = pr.default_param4optimization["sigma_place_field"] # cm
+
 
     Distance = Duration * 0.001 * animal_velocity  # Расстояние, которое пробегает животное за время симуляции в cm
-
+    sigma = pr.default_param4optimization["sigma_place_field"]  # cm
     if Distance < 8 * sigma:
         print("Расстояние, которое пробегает животное за время симуляции, меньше ПОЛЯ МЕСТА!!!")
 
@@ -243,7 +262,7 @@ def main():
     }
 
     # initial changable params
-    X0 = np.zeros(38, dtype=np.float64)
+    X0 = np.zeros(42, dtype=np.float64)
     bounds = []  # Boundaries for X
 
     x0_idx = 0
@@ -270,8 +289,15 @@ def main():
             bounds.append([100, 1000000])
             x0_idx += 1
 
+    # Устанавливаем мощности для NMDA
+    for synapse_type in params["synapses"]:
+        for syn in synapse_type["params"]:
+            if syn["gmax_nmda"] == 0: continue
+            X0[x0_idx] = syn["gmax_nmda"]
+            bounds.append([1, 10e6])
+            x0_idx += 1
 
-    args = (dt, Duration, slope, animal_velocity, theta_freq, Rpc, sigma, params)
+    args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
 
     # loss_p = (X0, ) + args
     #
@@ -282,11 +308,13 @@ def main():
     timer = time.time()
     print('starting optimization ... ')
 
-    sol = differential_evolution(Loss, x0=X0, popsize=15, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 args = args )
+    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              polish=False, args = args )
 
+    sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    callback(sol)
     print("Time of optimization ", time.time() - timer, " sec")
     print("success ", sol.success)
     print("message ", sol.message)
