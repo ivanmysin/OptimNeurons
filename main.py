@@ -4,7 +4,7 @@ import numpy as np
 import slib as lib
 import net_params as pr
 import matplotlib.pyplot as plt
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from scipy.signal.windows import parzen
 from scipy.special import i0 as bessel_i0
 import time
@@ -212,10 +212,10 @@ class Simulator:
         simulated_spike_rate, Erev_sum = self.run_model(X)
 
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
-        L = np.sum(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
+        L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
 
-        k = 1.0
-        L += k * np.sum( (E_tot_t - Erev_sum)**2 )
+        k = 0.01
+        L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         
         
         #print("End loss")
@@ -308,11 +308,13 @@ def main():
     timer = time.time()
     print('starting optimization ... ')
 
-    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=False, args = args )
+    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, callback=callback, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              polish=False, args = args )
 
+    sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    callback(sol)
     print("Time of optimization ", time.time() - timer, " sec")
     print("success ", sol.success)
     print("message ", sol.message)
