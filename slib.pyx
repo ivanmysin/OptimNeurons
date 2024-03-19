@@ -2,8 +2,6 @@
 """
 lib full cython
 """
-
-#STUFF = "Hi"
 from libc.math cimport exp, cos, sqrt
 from libcpp.map cimport map
 from libcpp.pair cimport pair

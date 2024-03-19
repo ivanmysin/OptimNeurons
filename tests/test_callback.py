@@ -5,12 +5,13 @@ COUNTER = 0
 def callback(intermediate_result=None):
     #print(intermediate_result.fun)
     #print(intermediate_result.x)
-
     return False
+
 def loss(X):
     global COUNTER
     COUNTER += 1
-    l = np.sum(X**2, axis=0)
+
+    l = np.mean( X + np.log(1 + np.exp(-2.0 * X) )  - np.log(2.0) )  #np.sum(X**2, axis=0)
 
     return l
 
