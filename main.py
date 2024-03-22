@@ -100,12 +100,12 @@ class Simulator:
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
 
-        # Устанавливаем NMDA проводимости
-        for synapse_type in self.synapses_params:
-             for syn_idx in range(synapse_type["gmax_nmda"].size):
-                 if synapse_type["gmax_nmda"][syn_idx] == 0: continue
-                 synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
-                 x_idx += 1
+        # # Устанавливаем NMDA проводимости
+        # for synapse_type in self.synapses_params:
+        #      for syn_idx in range(synapse_type["gmax_nmda"].size):
+        #          if synapse_type["gmax_nmda"][syn_idx] == 0: continue
+        #          synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
+        #          x_idx += 1
 
 
         try:
@@ -270,7 +270,7 @@ def main():
     }
 
     # initial changable params
-    X0 = np.zeros(42, dtype=np.float64)
+    X0 = np.zeros(38, dtype=np.float64)
     bounds = []  # Boundaries for X
 
     x0_idx = 0
@@ -298,12 +298,12 @@ def main():
             x0_idx += 1
 
     # Устанавливаем мощности для NMDA
-    for synapse_type in params["synapses"]:
-        for syn in synapse_type["params"]:
-            if syn["gmax_nmda"] == 0: continue
-            X0[x0_idx] = syn["gmax_nmda"]
-            bounds.append([1, 10e6])
-            x0_idx += 1
+    # for synapse_type in params["synapses"]:
+    #     for syn in synapse_type["params"]:
+    #         if syn["gmax_nmda"] == 0: continue
+    #         X0[x0_idx] = syn["gmax_nmda"]
+    #         bounds.append([1, 10e6])
+    #         x0_idx += 1
 
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
 
