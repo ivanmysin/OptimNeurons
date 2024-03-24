@@ -223,7 +223,7 @@ class Simulator:
 
         k = 0.01
         #L += k * np.mean( (E_tot_t - Erev_sum)**2 )
-        L += k * self.log_cosh(E_tot_t, Erev_sum)
+        #L += k * self.log_cosh(E_tot_t, Erev_sum)
 
         
         #print("End loss")
