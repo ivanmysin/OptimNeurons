@@ -72,11 +72,8 @@ class Simulator:
         self.neurons_params = neurons_params
         self.synapses_params = synapses_params
 
-
-    def run_model(self, X):
-
+    def x_2_params(self, X):
         x_idx = 0
-
         for i in range(len(self.neurons_params)):
             try:
                 for j in range(len(self.neurons_params[i]["params"])):
@@ -107,6 +104,9 @@ class Simulator:
         #          synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
         #          x_idx += 1
 
+
+
+    def run_model(self):
 
         try:
             thread_idx = int(multiprocessing.current_process()._identity[0])
@@ -140,7 +140,7 @@ class Simulator:
         Erev_sum = gE / (gtot + 0.000001)
 
 
-        return firing, Erev_sum
+        return firing, Erev_sum, gtot
     
     def r2kappa(self, R):
         """
@@ -212,19 +212,19 @@ class Simulator:
 
         sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
 
-
+        self.x_2_params(X)
 
         teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
-        simulated_spike_rate, Erev_sum = self.run_model(X)
+        simulated_spike_rate, Erev_sum, gtot = self.run_model()
 
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
         L = 0.0
 
         #L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
-        #L +=  self.log_cosh(teor_spike_rate, simulated_spike_rate)
+        L +=  self.log_cosh(teor_spike_rate, simulated_spike_rate)
 
-        k = 1.01
-        #L += k * np.mean( (E_tot_t - Erev_sum)**2 )
+        k = 1.00
+        ##L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         L += k * self.log_cosh(E_tot_t, Erev_sum)
 
         
