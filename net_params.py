@@ -5,13 +5,14 @@ V_AN = 10        # Скорость бега животного, cm/sec
 
 
 default_param4optimization = {
+    ### Spatial coding and physiological properties of hippocampal neurons in the Cornu Ammonis subregions ######
+    "mean_firing_rate": 0.5,  # spikes / sec
+    "R_place_cell": 0.2,
     "precession_slope" : 5.0, # cm/sec
     "precession_onset": 250.0, # deg
-    "sigma_place_field" : 4.0, # cm
-    "R_place_cell" : 0.2,
+    "sigma_place_field" : 6, #8.5, # cm
+    "peak_firing_rate": 8.0,  # spikes / sec
     "phase_out_place" : 180, # deg
-    "mean_firing_rate" : 0.5, # spikes / sec
-
 }
 
 ##### block of generators params #########
@@ -225,7 +226,7 @@ synapses_params = [
                 "Erev" : 60.0,
                 "pconn" : 0.001,
 
-                'gmax_nmda' :  0.0, # 10e3,  #0.0001 * 159341 * 0.1310724564,
+                'gmax_nmda' : 10e3,  #0.0001 * 159341 * 0.1310724564,
                 'Mg0' : 1.0,
                 'b' : 3.57,
                 'a_nmda' : 0.062,
@@ -250,7 +251,7 @@ synapses_params = [
                 "Erev": 60.0,
                 "pconn": 0.1,
 
-                'gmax_nmda':  0.0, #  10e3, # 0.1310724564,  # 0.0001 * 159341 *
+                'gmax_nmda':  10e3, # 0.1310724564,  # 0.0001 * 159341 *
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
@@ -275,7 +276,7 @@ synapses_params = [
                 "Erev": 60.0,
                 "pconn": 0.01, #0.16,
 
-                'gmax_nmda': 0.0, # 10e3, #0.0001 *  75376 * 1.021220696,
+                'gmax_nmda': 10e3, #0.0001 *  75376 * 1.021220696,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,
@@ -364,7 +365,7 @@ synapses_params = [
                 "Erev"  : 60.0,
                 "pconn" : 0.01, #0.008,
 
-                'gmax_nmda': 0.0,  # 10e3, #0.00001 * 22784 * 1.369309873,
+                'gmax_nmda': 10e3, #0.00001 * 22784 * 1.369309873,
                 'Mg0': 1.0,
                 'b': 3.57,
                 'a_nmda': 0.062,

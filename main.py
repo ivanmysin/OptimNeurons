@@ -24,9 +24,6 @@ class Simulator:
         self.theta_freq = theta_freq
         self.target_params = target_params
 
-
-
-
         neurons_params = deepcopy(params["neurons"])
         neurons_idx_by_names = {}
 
@@ -97,12 +94,12 @@ class Simulator:
                  synapse_type["gmax"][syn_idx] = X[x_idx]
                  x_idx += 1
 
-        # # Устанавливаем NMDA проводимости
-        # for synapse_type in self.synapses_params:
-        #      for syn_idx in range(synapse_type["gmax_nmda"].size):
-        #          if synapse_type["gmax_nmda"][syn_idx] == 0: continue
-        #          synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
-        #          x_idx += 1
+        # Устанавливаем NMDA проводимости
+        for synapse_type in self.synapses_params:
+             for syn_idx in range(synapse_type["gmax_nmda"].size):
+                 if synapse_type["gmax_nmda"][syn_idx] == 0: continue
+                 synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
+                 x_idx += 1
 
 
 
@@ -112,7 +109,14 @@ class Simulator:
             thread_idx = int(multiprocessing.current_process()._identity[0])
         except IndexError:
             thread_idx = 0
+
+        out_tmp = open('out_tmp.txt', mode='w')
+        pprint(self.neurons_params, stream=out_tmp)
+        pprint(self.synapses_params, stream=out_tmp)
+
+        out_tmp.close()
         net = lib.Network(self.neurons_params, self.synapses_params, dt=self.dt)
+
 
         N_steps = int(self.Duration/self.dt)
         net.integrate(N_steps)
@@ -160,23 +164,27 @@ class Simulator:
         return kappa
 
     def get_target_firing_rate(self, t, tc, dt, theta_freq, v_an, params):
-
+        ALPHA = 5.0
         meanSR = params['mean_firing_rate']
         phase = np.deg2rad(params['phase_out_place'])
         kappa = self.r2kappa(params["R_place_cell"])
+        maxFiring = params['peak_firing_rate']
 
         SLOPE = np.deg2rad(params['precession_slope'] * v_an * 0.001)  # rad / ms
         ONSET = np.deg2rad(params['precession_onset'])
-        ALPHA = 5.0
+
+
+        sigma_spt = params['sigma_place_field'] / v_an * 1000
+
 
         mult4time = 2 * np.pi * theta_freq * 0.001
 
         I0 = bessel_i0(kappa)
         normalizator = meanSR / I0 * 0.001 * dt
 
-        maxFiring = 25.0
+
         amp = 2 * (maxFiring - meanSR) / (meanSR + 1)  # maxFiring / meanSR - 1 #  range [-1, inf]
-        sigma_spt = 250
+
 
         # print(meanSR)
         multip = (1 + amp * np.exp(-0.5 * ((t - tc) / sigma_spt) ** 2))
@@ -217,17 +225,34 @@ class Simulator:
         teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
         simulated_spike_rate, Erev_sum, gtot = self.run_model()
 
+
+
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
+
+
+        fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
+        axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
+        axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
+        axes[0].legend(loc='upper right')
+
+        axes[1].plot(t, Erev_sum, label="Simulated", color='green')
+        axes[1].plot(t, E_tot_t, label="Target", color='blue')
+        axes[1].legend(loc='upper right')
+
+        axes[2].plot(t, gtot, label="Simulated", color='green')
+        plt.show()
+
         L = 0.0
 
         #L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
-        L +=  self.log_cosh(teor_spike_rate, simulated_spike_rate)
+        L += self.log_cosh(teor_spike_rate, simulated_spike_rate)
 
         k = 1.00
         ##L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         L += k * self.log_cosh(E_tot_t, Erev_sum)
 
-        
+        k2 = 1.00
+        L += -k2 * np.log( 100 * np.mean(gtot) )
         #print("End loss")
         return L
 
@@ -272,7 +297,7 @@ def main():
     }
 
     # initial changable params
-    X0 = np.zeros(38, dtype=np.float64)
+    X0 = np.zeros(42, dtype=np.float64)
     bounds = []  # Boundaries for X
 
     x0_idx = 0
@@ -299,15 +324,19 @@ def main():
             bounds.append([100, 1000000])
             x0_idx += 1
 
-    # Устанавливаем мощности для NMDA
-    # for synapse_type in params["synapses"]:
-    #     for syn in synapse_type["params"]:
-    #         if syn["gmax_nmda"] == 0: continue
-    #         X0[x0_idx] = syn["gmax_nmda"]
-    #         bounds.append([1, 10e6])
-    #         x0_idx += 1
+    # Устанавливаем максимальные проводимости для NMDA
+    for synapse_type in params["synapses"]:
+        for syn in synapse_type["params"]:
+            if syn["gmax_nmda"] == 0: continue
+            X0[x0_idx] = syn["gmax_nmda"]
+            bounds.append([1, 10e6])
+            x0_idx += 1
 
+    #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
+
+    # l = Loss(X0, *args)
+    # print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
     #
