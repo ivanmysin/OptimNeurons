@@ -230,29 +230,29 @@ class Simulator:
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
 
 
-        # fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
-        # axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
-        # axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
-        # axes[0].legend(loc='upper right')
-        #
-        # axes[1].plot(t, Erev_sum, label="Simulated", color='green')
-        # axes[1].plot(t, E_tot_t, label="Target", color='blue')
-        # axes[1].legend(loc='upper right')
-        #
-        # axes[2].plot(t, gtot, label="Simulated", color='green')
-        # plt.show()
+        fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
+        axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
+        axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
+        axes[0].legend(loc='upper right')
+
+        axes[1].plot(t, Erev_sum, label="Simulated", color='green')
+        axes[1].plot(t, E_tot_t, label="Target", color='blue')
+        axes[1].legend(loc='upper right')
+
+        axes[2].plot(t, gtot, label="Simulated", color='green')
+        plt.show()
 
         L = 0.0
 
         #L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
         L += self.log_cosh(teor_spike_rate, simulated_spike_rate)
 
-        k = 1.00
+        k = 100000000.00
         ##L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         L += k * self.log_cosh(E_tot_t, Erev_sum)
 
-        k2 = 1.00
-        L += -k2 * np.log( 100 * np.mean(gtot) )
+        k2 = 0.001
+        L += -k2 * np.log( 60 * np.mean(gtot) )
         #print("End loss")
         return L
 
@@ -321,7 +321,7 @@ def main():
     for synapse_type in params["synapses"]:
         for syn in synapse_type["params"]:
             X0[x0_idx] = syn["gmax"]
-            bounds.append([100, 1000000])
+            bounds.append([100, 10000000])
             x0_idx += 1
 
     # Устанавливаем максимальные проводимости для NMDA
@@ -335,8 +335,8 @@ def main():
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
 
-    # l = Loss(X0, *args)
-    # print("Loss value = ", l)
+    l = Loss(X0, *args)
+    print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
     #
@@ -344,21 +344,21 @@ def main():
     #     p.starmap(Loss, ( loss_p, loss_p ))
 
 
-    timer = time.time()
-    print('starting optimization ... ')
-
-    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=True, args = args, callback=callback)
-
-    #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-    callback(sol)
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("success ", sol.success)
-    print("message ", sol.message)
-    print("number of interation ", sol.nit)
-    print(sol.x)
+    # timer = time.time()
+    # print('starting optimization ... ')
+    #
+    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              polish=True, args = args, callback=callback)
+    #
+    # #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    # callback(sol)
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("success ", sol.success)
+    # print("message ", sol.message)
+    # print("number of interation ", sol.nit)
+    # print(sol.x)
 
     return
 

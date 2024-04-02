@@ -218,7 +218,7 @@ synapses_params = [
         "is_save_gsyn" : True,
         "params" : [
             {   # pyr to pyr connection
-                "gmax" : 159341 * 1.310724564,
+                "gmax" : 1000 * 159341 * 1.310724564,
                 "tau_d" : 6.489890385,
                 "tau_r" : 801.5798994,
                 "tau_f" : 19.0939326,
@@ -243,7 +243,7 @@ synapses_params = [
         "is_save_gsyn": True,
         "params": [
             {  # pyr to pyr connection
-                "gmax": 100 * 1.310724564,
+                "gmax": 1000 * 100 * 1.310724564,
                 "tau_d": 6.489890385,
                 "tau_r": 801.5798994,
                 "tau_f": 19.0939326,
@@ -274,7 +274,7 @@ synapses_params = [
                 "tau_f": 18.01005789,
                 "Uinc": 0.201847939,
                 "Erev": 60.0,
-                "pconn": 0.01, #0.16,
+                "pconn": 0.16, #0.16,
 
                 'gmax_nmda': 10e3, #0.0001 *  75376 * 1.021220696,
                 'Mg0': 1.0,
@@ -290,7 +290,7 @@ synapses_params = [
                 "tau_f" : 11.57699627,
                 "Uinc"  : 0.282768383,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, # 0.006,
+                "pconn" : 0.1, #1.0, # 0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -306,7 +306,7 @@ synapses_params = [
                 "tau_f" : 55.80256764,
                 "Uinc"  : 0.230934787,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, #0.006,
+                "pconn" : 0.1, #1.0, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -322,7 +322,7 @@ synapses_params = [
                 "tau_f" : 8.885170901,
                 "Uinc"  : 0.303356703,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, #0.006,
+                "pconn" : 0.1, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -338,7 +338,7 @@ synapses_params = [
                 "tau_f" : 9.208561312,
                 "Uinc"  : 0.280258327,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, #0.007,
+                "pconn" : 0.1, # 1.0, #0.007,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -379,7 +379,7 @@ synapses_params = [
                 "tau_f" : 11.0166117,
                 "Uinc"  : 0.263139955,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, #0.006,
+                "pconn" : 0.1, #1.0, #0.006,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -395,7 +395,7 @@ synapses_params = [
                 "tau_f": 12.28169848,
                 "Uinc": 0.233093825,
                 "Erev": -15.0,
-                "pconn": 1.0, #0.002,
+                "pconn": 0.1, #1.0, #0.002,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
@@ -411,7 +411,7 @@ synapses_params = [
                 "tau_f" : 12.28169848,
                 "Uinc"  : 0.233093825,
                 "Erev"  : -15.0,
-                "pconn" : 1.0, #0.002,
+                "pconn" : 0.1, #1.0, #0.002,
 
                 'gmax_nmda': 0.0,
                 'Mg0': 1.0,
