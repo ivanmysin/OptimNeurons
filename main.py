@@ -230,17 +230,17 @@ class Simulator:
         E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
 
 
-        fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
-        axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
-        axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
-        axes[0].legend(loc='upper right')
-
-        axes[1].plot(t, Erev_sum, label="Simulated", color='green')
-        axes[1].plot(t, E_tot_t, label="Target", color='blue')
-        axes[1].legend(loc='upper right')
-
-        axes[2].plot(t, gtot, label="Simulated", color='green')
-        plt.show()
+        # fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
+        # axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
+        # axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
+        # axes[0].legend(loc='upper right')
+        #
+        # axes[1].plot(t, Erev_sum, label="Simulated", color='green')
+        # axes[1].plot(t, E_tot_t, label="Target", color='blue')
+        # axes[1].legend(loc='upper right')
+        #
+        # axes[2].plot(t, gtot, label="Simulated", color='green')
+        # plt.show()
 
         L = 0.0
 
