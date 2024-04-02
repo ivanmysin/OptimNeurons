@@ -80,7 +80,7 @@ class Simulator:
                     self.neurons_params[i]["params"][j]["maxFiring"] = X[x_idx]
                     x_idx += 1
 
-                    self.neurons_params[i]["params"][j]["sp_centers"] = 1000*X[x_idx]/self.animal_velocity + 0.5 * self.Duration
+                    self.neurons_params[i]["params"][j]["sp_centers"] = X[x_idx] + 0.5 * 0.001 * self.Duration * self.animal_velocity
                     x_idx += 1
 
                     self.neurons_params[i]["params"][j]["sigma_sp"] = X[x_idx]
@@ -110,11 +110,10 @@ class Simulator:
         except IndexError:
             thread_idx = 0
 
-        out_tmp = open('out_tmp.txt', mode='w')
-        pprint(self.neurons_params, stream=out_tmp)
-        pprint(self.synapses_params, stream=out_tmp)
-
-        out_tmp.close()
+        # out_tmp = open('out_tmp.txt', mode='w')
+        # pprint(self.neurons_params, stream=out_tmp)
+        # pprint(self.synapses_params, stream=out_tmp)
+        # out_tmp.close()
         net = lib.Network(self.neurons_params, self.synapses_params, dt=self.dt)
 
 
@@ -133,15 +132,42 @@ class Simulator:
         gE = 0.0
         gtot = 0.0
 
+        t = np.arange(0, self.Duration, self.dt)
         for syn_idx, synapse in enumerate(self.synapses_params):
-            if synapse['target_compartment'] == 'dendrite':
-                continue
+            # if synapse['target_compartment'] == 'dendrite':
+            #     continue
             gsyn = net.get_synapse_by_idx(syn_idx).get_gsyn_hist()
+
+            # fig, axes = plt.subplots(nrows=gsyn.shape[0], sharex=True)
+            # for idx in range(gsyn.shape[0]):
+            #     if gsyn.shape[0] > 1:
+            #         axes[idx].plot(t, gsyn[idx, 1:])
+            #     else:
+            #         axes.plot(t, gsyn[idx, 1:])
+            # plt.show()
 
             gtot += np.sum(gsyn[:, 1:], axis=0)
             gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
         Erev_sum = gE / (gtot + 0.000001)
+
+
+
+
+
+        #sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
+        #E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
+        # fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
+        # axes[0].plot(t, firing, label="Simulated", color='green')
+        # #axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
+        # axes[0].legend(loc='upper right')
+        #
+        # axes[1].plot(t, Erev_sum, label="Simulated", color='green')
+        # axes[1].plot(t, E_tot_t, label="Target", color='blue')
+        # axes[1].legend(loc='upper right')
+        #
+        # axes[2].plot(t, gtot, label="Simulated", color='green')
+        # plt.show()
 
 
         return firing, Erev_sum, gtot
@@ -225,29 +251,14 @@ class Simulator:
         teor_spike_rate = self.get_target_firing_rate(t, center, self.dt, self.theta_freq, self.animal_velocity, self.target_params)
         simulated_spike_rate, Erev_sum, gtot = self.run_model()
 
-
-
-        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
-
-
-        fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
-        axes[0].plot(t, simulated_spike_rate, label="Simulated", color='green')
-        axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
-        axes[0].legend(loc='upper right')
-
-        axes[1].plot(t, Erev_sum, label="Simulated", color='green')
-        axes[1].plot(t, E_tot_t, label="Target", color='blue')
-        axes[1].legend(loc='upper right')
-
-        axes[2].plot(t, gtot, label="Simulated", color='green')
-        plt.show()
+        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2)  # - 5.0
 
         L = 0.0
 
         #L = np.mean(np.log((teor_spike_rate + 1) / (simulated_spike_rate + 1)) ** 2)
         L += self.log_cosh(teor_spike_rate, simulated_spike_rate)
 
-        k = 100000000.00
+        k = 1.0
         ##L += k * np.mean( (E_tot_t - Erev_sum)**2 )
         L += k * self.log_cosh(E_tot_t, Erev_sum)
 
@@ -321,7 +332,7 @@ def main():
     for synapse_type in params["synapses"]:
         for syn in synapse_type["params"]:
             X0[x0_idx] = syn["gmax"]
-            bounds.append([100, 10000000])
+            bounds.append([100, 1000000000])
             x0_idx += 1
 
     # Устанавливаем максимальные проводимости для NMDA
@@ -344,21 +355,21 @@ def main():
     #     p.starmap(Loss, ( loss_p, loss_p ))
 
 
-    # timer = time.time()
-    # print('starting optimization ... ')
-    #
-    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-    #                              mutation=0.2, bounds=bounds, maxiter=500, \
-    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-    #                              polish=True, args = args, callback=callback)
-    #
-    # #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-    # callback(sol)
-    # print("Time of optimization ", time.time() - timer, " sec")
-    # print("success ", sol.success)
-    # print("message ", sol.message)
-    # print("number of interation ", sol.nit)
-    # print(sol.x)
+    timer = time.time()
+    print('starting optimization ... ')
+
+    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, maxiter=500, \
+                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+                                 polish=True, args = args, callback=callback)
+
+    #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    callback(sol)
+    print("Time of optimization ", time.time() - timer, " sec")
+    print("success ", sol.success)
+    print("message ", sol.message)
+    print("number of interation ", sol.nit)
+    print(sol.x)
 
     return
 

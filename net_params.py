@@ -43,7 +43,7 @@ theta_spatial_generators_soma = {
 
             "sigma_sp": 8.0,  # cm
             "v_an": V_AN,  # cm/sec
-            "maxFiring": 25.0,  # spike sec in the center of field
+            "maxFiring": 8.0,  # spike sec in the center of field
             "sp_centers": 5.0,  # cm
         },
         {
@@ -111,7 +111,7 @@ theta_spatial_generators_dend = {
 
             "sigma_sp": 5.0,  # cm
             "v_an": V_AN,  # cm/sec
-            "maxFiring": 25.0,  # spike sec in the center of field
+            "maxFiring": 8.0,  # spike sec in the center of field
             "sp_centers": -5.0,  # cm
         },
         {
