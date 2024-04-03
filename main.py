@@ -346,8 +346,8 @@ def main():
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
 
-    l = Loss(X0, *args)
-    print("Loss value = ", l)
+    # l = Loss(X0, *args)
+    # print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
     #
