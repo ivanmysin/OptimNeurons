@@ -288,7 +288,7 @@ def callback(intermediate_result=None):
 
 def main():
     dt = 0.1 # ms
-    Duration = 5000 # Время симуляции в ms
+    Duration = 7000 # Время симуляции в ms
 
     Rpc = pr.default_param4optimization["R_place_cell"]
     theta_freq = pr.THETA_FREQ  # 5 Hz
