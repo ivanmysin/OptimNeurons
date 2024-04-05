@@ -155,19 +155,19 @@ class Simulator:
 
 
 
-        #sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
-        #E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
-        # fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
-        # axes[0].plot(t, firing, label="Simulated", color='green')
-        # #axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
-        # axes[0].legend(loc='upper right')
-        #
-        # axes[1].plot(t, Erev_sum, label="Simulated", color='green')
-        # axes[1].plot(t, E_tot_t, label="Target", color='blue')
-        # axes[1].legend(loc='upper right')
-        #
-        # axes[2].plot(t, gtot, label="Simulated", color='green')
-        # plt.show()
+        sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
+        E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
+        fig, axes = plt.subplots(nrows=3, sharex=True, figsize=(20, 20))
+        axes[0].plot(t, firing, label="Simulated", color='green')
+        #axes[0].plot(t, teor_spike_rate, label="Target", color='blue')
+        axes[0].legend(loc='upper right')
+
+        axes[1].plot(t, Erev_sum, label="Simulated", color='green')
+        axes[1].plot(t, E_tot_t, label="Target", color='blue')
+        axes[1].legend(loc='upper right')
+
+        axes[2].plot(t, gtot, label="Simulated", color='green')
+        plt.show()
 
 
         return firing, Erev_sum, gtot
@@ -263,7 +263,7 @@ class Simulator:
         L += k * self.log_cosh(E_tot_t, Erev_sum)
 
         k2 = 0.001
-        L += -k2 * np.log( 60 * np.mean(gtot) )
+        L += -k2 * np.log( np.mean(gtot)/60.0 )
         #print("End loss")
         return L
 
@@ -345,8 +345,9 @@ def main():
 
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
-
+    timer = time.time()
     l = Loss(X0, *args)
+    print("Time of optimization ", time.time() - timer, " sec")
     print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
@@ -355,21 +356,21 @@ def main():
     #     p.starmap(Loss, ( loss_p, loss_p ))
 
 
-    timer = time.time()
-    print('starting optimization ... ')
-
-    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=True, args = args, callback=callback)
-
-    #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-    callback(sol)
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("success ", sol.success)
-    print("message ", sol.message)
-    print("number of interation ", sol.nit)
-    print(sol.x)
+    # timer = time.time()
+    # print('starting optimization ... ')
+    #
+    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              polish=True, args = args, callback=callback)
+    #
+    # #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    # callback(sol)
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("success ", sol.success)
+    # print("message ", sol.message)
+    # print("number of interation ", sol.nit)
+    # print(sol.x)
 
     return
 
