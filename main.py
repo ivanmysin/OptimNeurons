@@ -345,10 +345,10 @@ def main():
 
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
-    timer = time.time()
-    l = Loss(X0, *args)
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("Loss value = ", l)
+    # timer = time.time()
+    # l = Loss(X0, *args)
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
     #
@@ -356,21 +356,21 @@ def main():
     #     p.starmap(Loss, ( loss_p, loss_p ))
 
 
-    # timer = time.time()
-    # print('starting optimization ... ')
-    #
-    # sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-    #                              mutation=0.2, bounds=bounds, maxiter=500, \
-    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-    #                              polish=True, args = args, callback=callback)
-    #
-    # #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-    # callback(sol)
-    # print("Time of optimization ", time.time() - timer, " sec")
-    # print("success ", sol.success)
-    # print("message ", sol.message)
-    # print("number of interation ", sol.nit)
-    # print(sol.x)
+    timer = time.time()
+    print('starting optimization ... ')
+
+    sol = differential_evolution(Loss, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, maxiter=500, \
+                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+                                 polish=True, args = args, callback=callback)
+
+    #sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    callback(sol)
+    print("Time of optimization ", time.time() - timer, " sec")
+    print("success ", sol.success)
+    print("message ", sol.message)
+    print("number of interation ", sol.nit)
+    print(sol.x)
 
     return
 
