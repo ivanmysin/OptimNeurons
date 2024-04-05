@@ -346,9 +346,9 @@ def main():
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
     # timer = time.time()
-    # l = Loss(X0, *args)
+    l = Loss(X0, *args)
     # print("Time of optimization ", time.time() - timer, " sec")
-    # print("Loss value = ", l)
+    print("Loss value = ", l)
 
     # loss_p = (X0, ) + args
     #
