@@ -16,6 +16,7 @@ from multiprocessing.pool import Pool
 import multiprocessing
 import pickle
 
+USE_SAVED_X0 = True
 class Simulator:
     def __init__(self, dt, duration, animal_velocity, theta_freq, target_params,  params):
         self.Duration = duration # ms 5000
@@ -286,26 +287,9 @@ def callback(intermediate_result=None):
 
     return False
 
-def main():
-    dt = 0.1 # ms
-    Duration = 7000 # Время симуляции в ms
 
-    Rpc = pr.default_param4optimization["R_place_cell"]
-    theta_freq = pr.THETA_FREQ  # 5 Hz
-    target_params = pr.default_param4optimization  # deg/cm
-    animal_velocity = pr.V_AN  # cm/sec
+def get_default_x0(params):
 
-
-    Distance = Duration * 0.001 * animal_velocity  # Расстояние, которое пробегает животное за время симуляции в cm
-    sigma = pr.default_param4optimization["sigma_place_field"]  # cm
-    if Distance < 8 * sigma:
-        print("Расстояние, которое пробегает животное за время симуляции, меньше ПОЛЯ МЕСТА!!!")
-
-
-    params = {
-        "neurons" : [pr.theta_generators, pr.theta_spatial_generators_soma, pr.theta_spatial_generators_dend, pr.neuron_params],
-        "synapses" : pr.synapses_params,
-    }
 
     # initial changable params
     X0 = np.zeros(42, dtype=np.float64)
@@ -342,6 +326,34 @@ def main():
             X0[x0_idx] = syn["gmax_nmda"]
             bounds.append([1, 10e6])
             x0_idx += 1
+
+    return X0, bounds
+def main():
+    dt = 0.1 # ms
+    Duration = 7000 # Время симуляции в ms
+
+    Rpc = pr.default_param4optimization["R_place_cell"]
+    theta_freq = pr.THETA_FREQ  # 5 Hz
+    target_params = pr.default_param4optimization  # deg/cm
+    animal_velocity = pr.V_AN  # cm/sec
+
+    Distance = Duration * 0.001 * animal_velocity  # Расстояние, которое пробегает животное за время симуляции в cm
+    sigma = pr.default_param4optimization["sigma_place_field"]  # cm
+    if Distance < 8 * sigma:
+        print("Расстояние, которое пробегает животное за время симуляции, меньше ПОЛЯ МЕСТА!!!")
+
+    params = {
+        "neurons": [pr.theta_generators, pr.theta_spatial_generators_soma, pr.theta_spatial_generators_dend,
+                    pr.neuron_params],
+        "synapses": pr.synapses_params,
+    }
+
+    if USE_SAVED_X0:
+        with h5py.File("results.h5", "r") as output:
+            X0 = output["X"][:]
+        _, bounds = get_default_x0(params)
+    else:
+        X0, bounds = get_default_x0(params)
 
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
