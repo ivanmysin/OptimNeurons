@@ -118,7 +118,9 @@ class Simulator:
 
 
         N_steps = int(self.Duration/self.dt)
+        #timer = time.time()
         net.integrate(N_steps)
+        #print("Time of loss compution ", time.time() - timer, " sec")
         # Vsoma = net.get_neuron_by_idx(-1).getCompartmentByName('soma').getVhist()
         # Vdend = net.get_neuron_by_idx(-1).getCompartmentByName('dendrite').getVhist()
 
@@ -287,8 +289,8 @@ def callback(intermediate_result=None):
     return False
 
 def main():
-    dt = 0.1 # ms
-    Duration = 7000 # Время симуляции в ms
+    dt = 0.2 # ms  #!!!!!!!!!!!!!!!!!!!!!!
+    Duration = 4000 # Время симуляции в ms #!!!!!!!!!!!!!!!!!!!!!!
 
     Rpc = pr.default_param4optimization["R_place_cell"]
     theta_freq = pr.THETA_FREQ  # 5 Hz
@@ -345,10 +347,10 @@ def main():
 
     #print( np.arange(0, X0.size)[np.isnan(X0)] )
     args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
-    # timer = time.time()
+    timer = time.time()
     l = Loss(X0, *args)
-    # print("Time of optimization ", time.time() - timer, " sec")
     print("Loss value = ", l)
+    print("Time of loss compution ", time.time() - timer, " sec")
 
     # loss_p = (X0, ) + args
     #

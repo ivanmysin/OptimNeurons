@@ -35,7 +35,7 @@ cdef class OriginCompartment(OriginFiring):
     cdef np.ndarray firing
     cdef np.ndarray g_tot, g_E
 
-    def __cinit__(self, params):
+    def __cinit__(self, params, dt=0.1):
         pass
 
     cdef np.ndarray getV(self):
@@ -80,6 +80,57 @@ cdef class OriginCompartment(OriginFiring):
 
     cpdef checkFired(self):
        pass
+
+#########################################################
+cdef class LIF(OriginCompartment):
+
+    cdef np.ndarray Cm, Vt, Vreset, gl, El
+    cdef double  Iextmean, Iextvarience, sqrt_dt
+
+    def __cinit__(self, params, dt=0.1):
+        self.dt = dt
+
+        self.V = params["V0"]
+        self.Cm = params["Cm"]
+        self.Vt = params["Vt"]
+        self.Vreset = params["Vreset"]
+        self.gl = params["gl"]
+        self.El = params["El"]
+        self.Iextmean = params["Iextmean"]
+        self.Iextvarience = params["Iextvarience"]
+
+        self.Vhist = np.array([])
+        self.firing = np.array([])
+
+        self.sqrt_dt = np.sqrt(self.dt)
+
+        self.g_tot = np.zeros_like(self.V)
+        self.g_E = np.zeros_like(self.V)
+
+    cpdef integrate(self, int n_steps):
+        #### cdef double t = 0
+
+        for _ in range(n_steps):
+            self.Vhist = np.append(self.Vhist, self.V[0])
+
+            self.Iext = np.random.normal(self.Iextmean, self.Iextvarience, self.V.size)
+
+            I = self.Iext/self.sqrt_dt
+            self.g_tot += self.gl
+            self.g_E += self.gl * self.El
+
+            tau_m = self.Cm / self.g_tot
+            Vinf = self.g_E / self.g_tot
+
+            self.V = Vinf - (Vinf - self.V) * np.exp(-self.dt / tau_m)
+            self.V += self.dt * I / self.Cm
+
+            fired = self.V >= self.Vt
+
+            self.V[fired] = self.Vreset[fired]
+
+            self.firing = np.append(self.firing, np.mean(fired))
+
 
 ####################
 cdef class PyramideCA1Compartment(OriginCompartment):

@@ -1,7 +1,7 @@
 import numpy as np
 
 THETA_FREQ = 6.0 # Частота тета-ритма, Гц
-V_AN = 10        # Скорость бега животного, cm/sec
+V_AN = 7        # Скорость бега животного, cm/sec
 
 
 default_param4optimization = {
@@ -10,7 +10,7 @@ default_param4optimization = {
     "R_place_cell": 0.2,
     "precession_slope" : 5.0, # cm/sec
     "precession_onset": 250.0, # deg
-    "sigma_place_field" : 8.5, # cm
+    "sigma_place_field" : 5.0, # 8.5, # cm !!!!!!!!!!!!!!!!!!
     "peak_firing_rate": 8.0,  # spikes / sec
     "phase_out_place" : 180, # deg
 }
@@ -156,57 +156,75 @@ theta_spatial_generators_dend = {
 ######################################################################
 NN = 70 # number of neurons
 neuron_params = {
-    "class" : "ComplexNeuron",
+    "class" : "LIF",
     "name"  : "ca1pyr",
-    "compartments" : [ {
-        "class" : "PyramideCA1Compartment",
-        "name" : "soma",
-        "V0": np.zeros(NN, dtype=np.float64) - 5.0,
-        "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
-        "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
-        "Iextvarience": 0.3, #
-        "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
-        "EK": np.zeros(NN, dtype=np.float64) - 25.0,
-        "El": np.zeros(NN, dtype=np.float64) - 5.0,
-        "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
-        "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
-        "sfica": np.zeros(NN, dtype=np.float64) + 0.13,
-        "sbetaca": np.zeros(NN, dtype=np.float64) + 0.075,
-        "gbarNa": np.zeros(NN, dtype=np.float64) + 30.0,
-        "gbarK_DR": np.zeros(NN, dtype=np.float64) + 17.0,
-        "gbarK_AHP": np.zeros(NN, dtype=np.float64) + 0.8,
-        "gbarK_C ": np.zeros(NN, dtype=np.float64) + 15.0,
-        "gl": np.zeros(NN, dtype=np.float64) + 0.1,
-        "gbarCa": np.zeros(NN, dtype=np.float64) + 6.0,
-    },
-    {
-        "class": "PyramideCA1Compartment",
-        "name": "dendrite",
-        "V0": np.zeros(NN, dtype=np.float64) - 5.0,
-        "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
-        "Iextmean": 0.0,
-        "Iextvarience": 0.3,
-        "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
-        "EK": np.zeros(NN, dtype=np.float64) - 25.0,
-        "El": np.zeros(NN, dtype=np.float64) - 5.0,
-        "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
-        "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
-        "sfica": np.zeros(NN, dtype=np.float64) + 0.13,
-        "sbetaca": np.zeros(NN, dtype=np.float64) + 0.075,
-        "gbarNa": np.zeros(NN, dtype=np.float64) + 0.0,
-        "gbarK_DR": np.zeros(NN, dtype=np.float64) + 0.0,
-        "gbarK_AHP": np.zeros(NN, dtype=np.float64) + 0.8,
-        "gbarK_C ": np.zeros(NN, dtype=np.float64) + 5.0,
-        "gl": np.zeros(NN, dtype=np.float64) + 0.1,
-        "gbarCa": np.zeros(NN, dtype=np.float64) + 5.0,
-    }],
-    "connections" : [{
-        "compartment1": "soma",
-        "compartment2": "dendrite",
-        "p": np.array([0.5, ]),
-        "g": np.array([1.5, ]),
-    },],
+    "V0": np.zeros(NN, dtype=np.float64) - 5.0,
+    "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
+    "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
+    "Iextvarience": 0.3, #
+    "El": np.zeros(NN, dtype=np.float64),
+    "gl": np.zeros(NN, dtype=np.float64) + 0.1,
+    "Vt" : np.zeros(1, dtype=np.float64) + 20.0,
+    "Vreset" : np.zeros(NN, dtype=np.float64) - 20.0,
 }
+
+
+
+# neuron_params = {
+#     "class" : "ComplexNeuron",
+#     "name"  : "ca1pyr",
+#     "compartments" : [ {
+#         "class" : "PyramideCA1Compartment",
+#         "name" : "soma",
+#         "V0": np.zeros(NN, dtype=np.float64) - 5.0,
+#         "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
+#         "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
+#         "Iextvarience": 0.3, #
+#         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
+#         "EK": np.zeros(NN, dtype=np.float64) - 25.0,
+#         "El": np.zeros(NN, dtype=np.float64) - 5.0,
+#         "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
+#         "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
+#         "sfica": np.zeros(NN, dtype=np.float64) + 0.13,
+#         "sbetaca": np.zeros(NN, dtype=np.float64) + 0.075,
+#         "gbarNa": np.zeros(NN, dtype=np.float64) + 30.0,
+#         "gbarK_DR": np.zeros(NN, dtype=np.float64) + 17.0,
+#         "gbarK_AHP": np.zeros(NN, dtype=np.float64) + 0.8,
+#         "gbarK_C ": np.zeros(NN, dtype=np.float64) + 15.0,
+#         "gl": np.zeros(NN, dtype=np.float64) + 0.1,
+#         "gbarCa": np.zeros(NN, dtype=np.float64) + 6.0,
+#     },
+#     {
+#         "class": "PyramideCA1Compartment",
+#         "name": "dendrite",
+#         "V0": np.zeros(NN, dtype=np.float64) - 5.0,
+#         "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
+#         "Iextmean": 0.0,
+#         "Iextvarience": 0.3,
+#         "ENa": np.zeros(NN, dtype=np.float64) + 120.0,
+#         "EK": np.zeros(NN, dtype=np.float64) - 25.0,
+#         "El": np.zeros(NN, dtype=np.float64) - 5.0,
+#         "ECa": np.zeros(NN, dtype=np.float64) + 140.0,
+#         "CCa": np.zeros(NN, dtype=np.float64) + 0.05,
+#         "sfica": np.zeros(NN, dtype=np.float64) + 0.13,
+#         "sbetaca": np.zeros(NN, dtype=np.float64) + 0.075,
+#         "gbarNa": np.zeros(NN, dtype=np.float64) + 0.0,
+#         "gbarK_DR": np.zeros(NN, dtype=np.float64) + 0.0,
+#         "gbarK_AHP": np.zeros(NN, dtype=np.float64) + 0.8,
+#         "gbarK_C ": np.zeros(NN, dtype=np.float64) + 5.0,
+#         "gl": np.zeros(NN, dtype=np.float64) + 0.1,
+#         "gbarCa": np.zeros(NN, dtype=np.float64) + 5.0,
+#     }],
+#     "connections" : [{
+#         "compartment1": "soma",
+#         "compartment2": "dendrite",
+#         "p": np.array([0.5, ]),
+#         "g": np.array([1.5, ]),
+#     },],
+# }
+
+
+
 ###############################################################################
 ### synapses block ############################################################
 synapses_params = [
