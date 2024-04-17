@@ -11,7 +11,7 @@ def loss(X):
     global COUNTER
     COUNTER += 1
 
-    l = np.mean( X + np.log(1 + np.exp(-2.0 * X) )  - np.log(2.0) )  #np.sum(X**2, axis=0)
+    l = np.mean( X + np.log(1 + np.exp(-2.0 * X) )  - np.log(2.0) ) + np.random.rand()  #np.sum(X**2, axis=0) +
 
     return l
 

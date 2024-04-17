@@ -1,7 +1,7 @@
 import numpy as np
 
 THETA_FREQ = 6.0 # Частота тета-ритма, Гц
-V_AN = 7        # Скорость бега животного, cm/sec
+V_AN = 10        # Скорость бега животного, cm/sec
 
 
 default_param4optimization = {
@@ -155,18 +155,26 @@ theta_spatial_generators_dend = {
 
 ######################################################################
 NN = 70 # number of neurons
+
 neuron_params = {
-    "class" : "LIF",
+    "class" : "OriginCompartment",
     "name"  : "ca1pyr",
-    "V0": np.zeros(NN, dtype=np.float64) - 5.0,
-    "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
-    "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
-    "Iextvarience": 0.3, #
-    "El": np.zeros(NN, dtype=np.float64),
-    "gl": np.zeros(NN, dtype=np.float64) + 0.1,
-    "Vt" : np.zeros(1, dtype=np.float64) + 20.0,
-    "Vreset" : np.zeros(NN, dtype=np.float64) - 20.0,
+    "V0" : np.array([0.0, ]),
 }
+
+
+# neuron_params = {
+#     "class" : "LIF",
+#     "name"  : "ca1pyr",
+#     "V0": np.zeros(NN, dtype=np.float64) - 5.0,
+#     "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
+#     "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
+#     "Iextvarience": 0.3, #
+#     "El": np.zeros(NN, dtype=np.float64),
+#     "gl": np.zeros(NN, dtype=np.float64) + 0.1,
+#     "Vt" : np.zeros(1, dtype=np.float64) + 20.0,
+#     "Vreset" : np.zeros(NN, dtype=np.float64) - 20.0,
+# }
 
 
 
@@ -253,31 +261,31 @@ synapses_params = [
             },
         ],
     },
-    {
-        "class": "PlasticSynapse",
-        "pre_name": "ca1pyr",
-        "post_name": "ca1pyr",
-        "target_compartment": "soma",
-        "is_save_gsyn": True,
-        "params": [
-            {  # pyr to pyr connection
-                "gmax": 100 * 1.310724564,
-                "tau_d": 6.489890385,
-                "tau_r": 801.5798994,
-                "tau_f": 19.0939326,
-                "Uinc": 0.220334906,
-                "Erev": 60.0,
-                "pconn": 0.1,
-
-                'gmax_nmda':  10e3, # 0.1310724564,  # 0.0001 * 159341 *
-                'Mg0': 1.0,
-                'b': 3.57,
-                'a_nmda': 0.062,
-                'tau_rise_nmda': 2.0,
-                'tau_decay_nmda': 89.0,
-            },
-        ],
-    },
+    # {
+    #     "class": "PlasticSynapse",
+    #     "pre_name": "ca1pyr",
+    #     "post_name": "ca1pyr",
+    #     "target_compartment": "soma",
+    #     "is_save_gsyn": True,
+    #     "params": [
+    #         {  # pyr to pyr connection
+    #             "gmax": 100 * 1.310724564,
+    #             "tau_d": 6.489890385,
+    #             "tau_r": 801.5798994,
+    #             "tau_f": 19.0939326,
+    #             "Uinc": 0.220334906,
+    #             "Erev": 60.0,
+    #             "pconn": 0.1,
+    #
+    #             'gmax_nmda':  10e3, # 0.1310724564,  # 0.0001 * 159341 *
+    #             'Mg0': 1.0,
+    #             'b': 3.57,
+    #             'a_nmda': 0.062,
+    #             'tau_rise_nmda': 2.0,
+    #             'tau_decay_nmda': 89.0,
+    #         },
+    #     ],
+    # },
     {
         "class": "PlasticSynapse",
         "pre_name": "theta_spatial_inputs_soma",
@@ -365,7 +373,7 @@ synapses_params = [
                 'tau_rise_nmda': 2.0,
                 'tau_decay_nmda': 89.0,
             },
-        ],
+       ],
     },
     {
         "class": "PlasticSynapse",
