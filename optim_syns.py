@@ -136,7 +136,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
 
         g = Gmax * R
         G_tot = np.sum(g)
-        Erevsum = np.sum(g * Erev) / G_tot
+        Erevsum = np.sum(g * Erev) / (G_tot + 0.0000001)
 
         tau_m = G_tot / Cm
 
