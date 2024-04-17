@@ -134,7 +134,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         #
         # g_hist.append(g_Unmda.ravel() * gnmda)
 
-        g = Gmax * X
+        g = Gmax * R
         G_tot = np.sum(g)
         Erevsum = np.sum(g * Erev) / G_tot
 
