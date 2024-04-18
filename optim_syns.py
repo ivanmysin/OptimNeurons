@@ -150,12 +150,14 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         # tau_m_hist[t_idx] = tau_m
 
     g_hist = np.stack(g_hist)
-
     g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
 
-    Erev_hist = np.sum(g_hist*Erev, axis=1)
+    G_tot = np.sum(g_hist, axis=1)
 
-    tau_m_hist = np.sum(g_hist, axis=1) / Cm
+
+    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.00000001)
+
+    tau_m_hist = G_tot / Cm
 
     return Erev_hist, tau_m_hist
 ###############################################################
