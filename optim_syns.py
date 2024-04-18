@@ -148,6 +148,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         #
         # Erev_hist[t_idx] = Erevsum
         # tau_m_hist[t_idx] = tau_m
+    Erev = Erev.reshape(1, -1)
 
     g_hist = np.stack(g_hist)
     g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
@@ -233,7 +234,7 @@ def get_default_x0(params):
 
     #print(s_size)
     for _ in range(s_size):
-        bounds.append([0.0, 10])
+        bounds.append([0.0, 500])
 
     X0 = X0[:x0_idx]
     return X0, bounds

@@ -110,9 +110,9 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
 
 
 
-    Erev_hist =  np.zeros_like(t)
-    tau_m_hist = np.zeros_like(t)
-
+    # Erev_hist = np.zeros_like(t)
+    # tau_m_hist = np.zeros_like(t)
+    g_hist = []
 
 
     for t_idx, ts in enumerate(t):
@@ -139,14 +139,30 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         #
         # g_hist.append(g_Unmda.ravel() * gnmda)
 
-        g = Gmax * R
-        G_tot = np.sum(g)
-        Erevsum = np.sum(g * Erev) / (G_tot + 0.0000001)
+        g_hist.append(R)
+        # g = Gmax * R
+        # G_tot = np.sum(g)
+        # Erevsum = np.sum(g * Erev) / (G_tot + 0.0000001)
+        #
+        # tau_m = G_tot / Cm
+        #
+        # Erev_hist[t_idx] = Erevsum
+        # tau_m_hist[t_idx] = tau_m
 
-        tau_m = G_tot / Cm
+    g_hist = np.stack(g_hist)
+    g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
 
-        Erev_hist[t_idx] = Erevsum
-        tau_m_hist[t_idx] = tau_m
+    G_tot = np.sum(g_hist, axis=1)
+
+    # Erev = Erev.reshape(1, -1)
+    #
+    # print(g_hist.shape)
+    # print(Erev.shape)
+
+
+    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.00000001)
+
+    tau_m_hist = G_tot / Cm
 
     return Erev_hist, tau_m_hist
 ###############################################################
@@ -281,7 +297,7 @@ dt = 0.1
 Cm = 3.0
 #X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
 
-with h5py.File("results.h5", "r") as dfile:
+with h5py.File("_results.h5", "r") as dfile:
     X = dfile["X"][:]
 
 
