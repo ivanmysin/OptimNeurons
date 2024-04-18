@@ -110,9 +110,9 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
 
 
 
-    Erev_hist =  np.zeros_like(t)
-    tau_m_hist = np.zeros_like(t)
-
+    # Erev_hist = np.zeros_like(t)
+    # tau_m_hist = np.zeros_like(t)
+    g_hist = []
 
 
     for t_idx, ts in enumerate(t):
@@ -139,14 +139,23 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         #
         # g_hist.append(g_Unmda.ravel() * gnmda)
 
-        g = Gmax * R
-        G_tot = np.sum(g)
-        Erevsum = np.sum(g * Erev) / (G_tot + 0.0000001)
+        g_hist.append(R)
+        # g = Gmax * R
+        # G_tot = np.sum(g)
+        # Erevsum = np.sum(g * Erev) / (G_tot + 0.0000001)
+        #
+        # tau_m = G_tot / Cm
+        #
+        # Erev_hist[t_idx] = Erevsum
+        # tau_m_hist[t_idx] = tau_m
 
-        tau_m = G_tot / Cm
+    g_hist = np.stack(g_hist)
 
-        Erev_hist[t_idx] = Erevsum
-        tau_m_hist[t_idx] = tau_m
+    g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
+
+    Erev_hist = np.sum(g_hist*Erev, axis=1)
+
+    tau_m_hist = np.sum(g_hist, axis=1) / Cm
 
     return Erev_hist, tau_m_hist
 ###############################################################
@@ -169,7 +178,7 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 
 
     L = 0.0
-    L += np.mean( (tau_m_hist - 15)**2)
+    #L += np.mean( (tau_m_hist - 15)**2)
     #L += np.mean((Etar - Erev_hist**2))
     #L += np.mean(np.log((Etar + 17) / (Erev_hist + 17)) ** 2)
 
@@ -185,7 +194,7 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 ###############################################################
 def callback(intermediate_result=None):
     #print("COUNTER = ", COUNTER)
-    with h5py.File("results.h5", "w") as output:
+    with h5py.File("_results.h5", "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
 
@@ -217,12 +226,12 @@ def get_default_x0(params):
 
     #print()
     s_size = len(params["synapses"]["Gmax"])
-    X0[x0_idx: x0_idx+len(params["synapses"]["Gmax"])] = params["synapses"]["Gmax"]
+    X0[x0_idx: x0_idx+len(params["synapses"]["Gmax"])] = 1.0 #params["synapses"]["Gmax"]
     x0_idx += s_size
 
     #print(s_size)
     for _ in range(s_size):
-        bounds.append([1, 10e18])
+        bounds.append([0.0, 10])
 
     X0 = X0[:x0_idx]
     return X0, bounds
@@ -307,7 +316,7 @@ print("number of interation ", sol.nit)
 print(sol.x)
 Erev_hist, tau_m_hist = simulate(sol.x, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
 t = np.arange(0, Duration, dt)
-t = t[100:]
+#t = t[100:]
 tc = 0.5*Duration
 Etarget = get_target_Esyn(t, tc, dt, theta_freq, animal_velocity, target_params)
 
