@@ -28,6 +28,19 @@ cdef class OriginFiring:
     def getCompartmentByName(self, name):
         return self
 
+    cdef np.ndarray getV(self):
+        return 0.0
+
+    cdef void setIext(self, np.ndarray Iext):
+        pass
+
+    cdef addIsyn(self, gsyn, gE):
+        pass
+
+    def get_firing(self):
+        firing = np.zeros(1)
+        return firing
+
 
 cdef class OriginCompartment(OriginFiring):
     cdef np.ndarray V, Isyn, Iext, Icoms
@@ -36,6 +49,11 @@ cdef class OriginCompartment(OriginFiring):
     cdef np.ndarray g_tot, g_E
 
     def __cinit__(self, params, dt=0.1):
+        self.V = params["V0"]
+        self.g_tot = np.zeros_like(self.V)
+        self.g_E = np.zeros_like(self.V)
+
+    cpdef integrate(self, int n_steps):
         pass
 
     cdef np.ndarray getV(self):
