@@ -30,7 +30,7 @@ def get_target_Esyn(t, tc, dt, theta_freq, v_an, params):
     mult4time = 2 * np.pi * theta_freq * 0.001
 
     # I0 = bessel_i0(kappa)
-    normalizator = 10  # meanSR / I0 * 0.001 * dt
+    normalizator = 5  # meanSR / I0 * 0.001 * dt
 
     amp = 20  # 2 * (maxFiring - meanSR) / (meanSR + 1)  # maxFiring / meanSR - 1 #  range [-1, inf]
 
@@ -149,7 +149,12 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     Erev = Erev.reshape(1, -1)
 
     g_hist = np.stack(g_hist)
-    g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
+    g_hist = Gmax * g_hist / np.mean(g_hist, axis=0)
+
+    # for i in range(g_hist.shape[1]):
+    #     plt.plot(t, g_hist[:, i])
+    #     plt.show()
+
 
     G_tot = np.sum(g_hist, axis=1)
 
@@ -165,9 +170,6 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 
     theta_freq = params_generators['params'][0]['freq']
     Erev_hist, tau_m_hist = simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
-
-
-
 
     tc = 0.5*Duration
     t = np.linspace(0, Duration, Erev_hist.size)
@@ -207,20 +209,24 @@ def get_default_x0(params):
     # initial changable params
     X0 = np.zeros(42, dtype=np.float64)
     bounds = []  # Boundaries for X
+    x_names = []
 
     x0_idx = 0
     for neurons_types in params["neurons"]["params"][1:]:
         try:
              X0[x0_idx] = neurons_types["maxFiring"]
              bounds.append([0.0001, 100])
+             x_names.append("maxFiring of {name}".format(name=neurons_types['name']) )
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sp_centers"]
              bounds.append([-100000, 100000])
+             x_names.append("sp_centers of {name}".format(name=neurons_types['name']))
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sigma_sp"]
              bounds.append([0.1, 1000])
+             x_names.append("sigma_sp of {name}".format(name=neurons_types['name']))
              x0_idx += 1
         except KeyError:
             continue
@@ -231,11 +237,13 @@ def get_default_x0(params):
     x0_idx += s_size
 
     #print(s_size)
-    for _ in range(s_size):
+    for s_idx in range(s_size):
         bounds.append([0.0, 500])
+        x_names.append("Gmax {name}".format(name=params["neurons"]["params"][s_idx]['name']  ) )
 
     X0 = X0[:x0_idx]
-    return X0, bounds
+
+    return X0, bounds, x_names
 ################################################################################
 
 animal_velocity = pr.V_AN
@@ -291,7 +299,7 @@ dt = 0.1
 Cm = 3.0
 
 
-X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
+X, bounds, x_names = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
 
 #print(X.size, len(bounds))
 
@@ -307,19 +315,18 @@ sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.
                                  mutation=0.2, bounds=bounds, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
                                  polish=True, args=args, callback=callback)
-
-    # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
 callback(sol)
 print("Time of optimization ", time.time() - timer, " sec")
 print("success ", sol.success)
 print("message ", sol.message)
 print("number of interation ", sol.nit)
-print(sol.x)
 X = sol.x
 
-# with h5py.File("_results.h5", "r") as dfile:
+# with h5py.File("results.h5", "r") as dfile:
 #     X = dfile["X"][:]
-
+print("Optimal parameters:")
+for idx in range(len(X)):
+    print(x_names[idx], " = ", X[idx])
 
 Erev_hist, tau_m_hist = simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
 t = np.arange(0, Duration, dt)
