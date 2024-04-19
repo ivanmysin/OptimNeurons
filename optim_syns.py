@@ -30,12 +30,12 @@ def get_target_Esyn(t, tc, dt, theta_freq, v_an, params):
     mult4time = 2 * np.pi * theta_freq * 0.001
 
     # I0 = bessel_i0(kappa)
-    normalizator = 2  # meanSR / I0 * 0.001 * dt
+    normalizator = 10  # meanSR / I0 * 0.001 * dt
 
     amp = 20  # 2 * (maxFiring - meanSR) / (meanSR + 1)  # maxFiring / meanSR - 1 #  range [-1, inf]
 
     # print(meanSR)
-    multip = (1 + amp * np.exp(-0.5 * ((t - tc) / sigma_spt) ** 2))
+    multip = amp * np.exp(-0.5 * ((t - tc) / sigma_spt) ** 2)
 
     start_place = t - tc - 3 * sigma_spt
     end_place = t - tc + 3 * sigma_spt
@@ -107,8 +107,6 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     exp_tau_r = np.exp(-dt / tau_r)
     exp_tau_d = np.exp(-dt / tau_d)
     exp_tau_f = np.exp(-dt / tau_f)
-
-
 
     # Erev_hist = np.zeros_like(t)
     # tau_m_hist = np.zeros_like(t)
@@ -182,10 +180,10 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 
     L = 0.0
     #L += np.mean( (tau_m_hist - 15)**2)
-    L += np.mean((Etar - Erev_hist)**2)
+
     #L += np.mean(np.log((Etar + 17) / (Erev_hist + 17)) ** 2)
 
-    #L += log_cosh(Etar, Erev_hist)
+    L += log_cosh(Etar, Erev_hist)
 
 
     COUNTER += 1
@@ -304,20 +302,26 @@ X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synap
 args = (Duration, dt, Cm, animal_velocity, params_generators, params_synapses, target_params)
 timer = time.time()
 
-print('starting optimization ... ')
-sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=True, args=args, callback=callback)
+# print('starting optimization ... ')
+# sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.7, \
+#                                  mutation=0.2, bounds=bounds, maxiter=500, \
+#                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+#                                  polish=True, args=args, callback=callback)
+#
+#     # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+# callback(sol)
+# print("Time of optimization ", time.time() - timer, " sec")
+# print("success ", sol.success)
+# print("message ", sol.message)
+# print("number of interation ", sol.nit)
+# print(sol.x)
+#X = sol.x
 
-    # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-callback(sol)
-print("Time of optimization ", time.time() - timer, " sec")
-print("success ", sol.success)
-print("message ", sol.message)
-print("number of interation ", sol.nit)
-print(sol.x)
-Erev_hist, tau_m_hist = simulate(sol.x, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
+# with h5py.File("_results.h5", "r") as dfile:
+#     X = dfile["X"][:]
+
+
+Erev_hist, tau_m_hist = simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
 t = np.arange(0, Duration, dt)
 #t = t[100:]
 tc = 0.5*Duration

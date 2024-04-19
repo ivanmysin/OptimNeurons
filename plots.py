@@ -297,7 +297,7 @@ dt = 0.1
 Cm = 3.0
 #X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
 
-with h5py.File("_results.h5", "r") as dfile:
+with h5py.File("_results_mse.h5", "r") as dfile:
     X = dfile["X"][:]
 
 
