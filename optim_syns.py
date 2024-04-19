@@ -149,7 +149,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     Erev = Erev.reshape(1, -1)
 
     g_hist = np.stack(g_hist)
-    g_hist = Gmax * g_hist / np.mean(g_hist, axis=0)
+    g_hist = Gmax * 10e4 * g_hist #/ np.mean(g_hist, axis=0)
 
     # for i in range(g_hist.shape[1]):
     #     plt.plot(t, g_hist[:, i])
@@ -233,7 +233,7 @@ def get_default_x0(params):
 
     #print()
     s_size = len(params["synapses"]["Gmax"])
-    X0[x0_idx: x0_idx+len(params["synapses"]["Gmax"])] = 1.0 #params["synapses"]["Gmax"]
+    X0[x0_idx: x0_idx+len(params["synapses"]["Gmax"])] = params["synapses"]["Gmax"]
     x0_idx += s_size
 
     #print(s_size)
@@ -285,7 +285,7 @@ for Syn in pr.synapses_params:
         pconn.append(p["pconn"])
 
 params_synapses['Erev'] = np.asarray(Erev)
-params_synapses['Gmax'] = np.asarray(Gmax)
+params_synapses['Gmax'] = 1.0 + np.zeros_like(Erev) # np.asarray(Gmax)
 params_synapses['tau_d'] = np.asarray(tau_d)
 params_synapses['tau_r'] = np.asarray(tau_r)
 params_synapses['tau_f'] = np.asarray(tau_f)
