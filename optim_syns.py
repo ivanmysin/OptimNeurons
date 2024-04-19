@@ -302,20 +302,20 @@ X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synap
 args = (Duration, dt, Cm, animal_velocity, params_generators, params_synapses, target_params)
 timer = time.time()
 
-# print('starting optimization ... ')
-# sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.7, \
-#                                  mutation=0.2, bounds=bounds, maxiter=500, \
-#                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-#                                  polish=True, args=args, callback=callback)
-#
-#     # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-# callback(sol)
-# print("Time of optimization ", time.time() - timer, " sec")
-# print("success ", sol.success)
-# print("message ", sol.message)
-# print("number of interation ", sol.nit)
-# print(sol.x)
-#X = sol.x
+print('starting optimization ... ')
+sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.7, \
+                                 mutation=0.2, bounds=bounds, maxiter=500, \
+                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+                                 polish=True, args=args, callback=callback)
+
+    # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+callback(sol)
+print("Time of optimization ", time.time() - timer, " sec")
+print("success ", sol.success)
+print("message ", sol.message)
+print("number of interation ", sol.nit)
+print(sol.x)
+X = sol.x
 
 # with h5py.File("_results.h5", "r") as dfile:
 #     X = dfile["X"][:]
