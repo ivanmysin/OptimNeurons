@@ -182,10 +182,10 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 
     L = 0.0
     #L += np.mean( (tau_m_hist - 15)**2)
-    #L += np.mean((Etar - Erev_hist**2))
+    L += np.mean((Etar - Erev_hist)**2)
     #L += np.mean(np.log((Etar + 17) / (Erev_hist + 17)) ** 2)
 
-    L += log_cosh(Etar, Erev_hist)
+    #L += log_cosh(Etar, Erev_hist)
 
 
     COUNTER += 1
