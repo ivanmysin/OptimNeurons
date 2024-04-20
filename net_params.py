@@ -8,11 +8,11 @@ default_param4optimization = {
     ### Spatial coding and physiological properties of hippocampal neurons in the Cornu Ammonis subregions ######
     "mean_firing_rate": 0.5,  # spikes / sec
     "R_place_cell": 0.2,
-    "precession_slope" : 5.0, # cm/sec
-    "precession_onset": 250.0, # deg
-    "sigma_place_field" : 5.0, # 8.5, # cm !!!!!!!!!!!!!!!!!!
+    "precession_slope" : 5.0, # cm/sec  # superfitial 5.0 # deep 10.0
+    "precession_onset": 150.0, # deg # superfitial 150  # deep 220
+    "sigma_place_field" : 8.5, # cm
     "peak_firing_rate": 8.0,  # spikes / sec
-    "phase_out_place" : 180, # deg
+    "phase_out_place" : 180, # deg # superfitial 180 # deep 0.0
 }
 
 ##### block of generators params #########
