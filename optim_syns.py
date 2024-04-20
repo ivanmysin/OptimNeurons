@@ -149,7 +149,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     Erev = Erev.reshape(1, -1)
 
     g_hist = np.stack(g_hist)
-    g_hist = Gmax * 10e4 * g_hist #/ np.mean(g_hist, axis=0)
+    g_hist = Gmax * g_hist #/ np.mean(g_hist, axis=0)
 
     # for i in range(g_hist.shape[1]):
     #     plt.plot(t, g_hist[:, i])
@@ -159,7 +159,7 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     G_tot = np.sum(g_hist, axis=1)
 
 
-    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.00000001)
+    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.1)
 
     tau_m_hist = Cm / (G_tot + 0.1)
 
@@ -181,11 +181,12 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 
 
     L = 0.0
-    #L += np.mean( (tau_m_hist - 15)**2)
+    #L += np.sqrt( np.mean( (Etar - Erev_hist)**2) )
+    L += np.square(np.subtract(Etar,Erev_hist)).mean()
 
     #L += np.mean(np.log((Etar + 17) / (Erev_hist + 17)) ** 2)
 
-    L += log_cosh(Etar, Erev_hist)
+    #L += log_cosh(Etar, Erev_hist)
 
 
     COUNTER += 1
@@ -197,7 +198,7 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 ###############################################################
 def callback(intermediate_result=None):
     #print("COUNTER = ", COUNTER)
-    with h5py.File("abs_norm_results.h5", "w") as output:
+    with h5py.File("mse_results.h5", "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
 
@@ -220,12 +221,12 @@ def get_default_x0(params):
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sp_centers"]
-             bounds.append([-100000, 100000])
+             bounds.append([-8.0, 8.0])
              x_names.append("sp_centers of {name}".format(name=neurons_types['name']))
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sigma_sp"]
-             bounds.append([0.1, 1000])
+             bounds.append([0.1, 15])
              x_names.append("sigma_sp of {name}".format(name=neurons_types['name']))
              x0_idx += 1
         except KeyError:
@@ -312,7 +313,7 @@ timer = time.time()
 
 print('starting optimization ... ')
 sol = differential_evolution(Loss, x0=X, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=[0.2, 0.8], bounds=bounds, maxiter=500, \
+                                 mutation=0.2, bounds=bounds, maxiter=500, \
                                  workers=-1, updating='deferred', disp=True, strategy='best2bin', \
                                  polish=True, args=args, callback=callback)
 callback(sol)

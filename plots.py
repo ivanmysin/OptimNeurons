@@ -108,8 +108,6 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
     exp_tau_d = np.exp(-dt / tau_d)
     exp_tau_f = np.exp(-dt / tau_f)
 
-
-
     # Erev_hist = np.zeros_like(t)
     # tau_m_hist = np.zeros_like(t)
     g_hist = []
@@ -148,24 +146,26 @@ def simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_syn
         #
         # Erev_hist[t_idx] = Erevsum
         # tau_m_hist[t_idx] = tau_m
+    Erev = Erev.reshape(1, -1)
 
     g_hist = np.stack(g_hist)
-    g_hist = Gmax * g_hist / np.max(g_hist, axis=0)
+    g_hist = Gmax *  g_hist #/ np.mean(g_hist, axis=0)
+
+    # for i in range(g_hist.shape[1]):
+    #     plt.plot(t, g_hist[:, i])
+    #     plt.show()
+
 
     G_tot = np.sum(g_hist, axis=1)
 
-    # Erev = Erev.reshape(1, -1)
-    #
-    # print(g_hist.shape)
-    # print(Erev.shape)
 
+    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.1)
 
-    Erev_hist = np.sum(g_hist*Erev, axis=1) / (G_tot + 0.00000001)
-
-    tau_m_hist = G_tot / Cm
+    tau_m_hist = Cm / (G_tot + 0.1)
 
     return Erev_hist, tau_m_hist
 ###############################################################
+
 def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses, target_params):
     global COUNTER
 
@@ -201,7 +201,7 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 ###############################################################
 def callback(intermediate_result=None):
     #print("COUNTER = ", COUNTER)
-    with h5py.File("results.h5", "w") as output:
+    with h5py.File("mse_results.h5", "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
 
@@ -213,20 +213,24 @@ def get_default_x0(params):
     # initial changable params
     X0 = np.zeros(42, dtype=np.float64)
     bounds = []  # Boundaries for X
+    x_names = []
 
     x0_idx = 0
     for neurons_types in params["neurons"]["params"][1:]:
         try:
              X0[x0_idx] = neurons_types["maxFiring"]
              bounds.append([0.0001, 100])
+             x_names.append("maxFiring of {name}".format(name=neurons_types['name']) )
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sp_centers"]
              bounds.append([-100000, 100000])
+             x_names.append("sp_centers of {name}".format(name=neurons_types['name']))
              x0_idx += 1
 
              X0[x0_idx] = neurons_types["sigma_sp"]
              bounds.append([0.1, 1000])
+             x_names.append("sigma_sp of {name}".format(name=neurons_types['name']))
              x0_idx += 1
         except KeyError:
             continue
@@ -237,11 +241,13 @@ def get_default_x0(params):
     x0_idx += s_size
 
     #print(s_size)
-    for _ in range(s_size):
-        bounds.append([1, 10e18])
+    for s_idx in range(s_size):
+        bounds.append([0.0, 500])
+        x_names.append("Gmax {name}".format(name=params["neurons"]["params"][s_idx]['name']  ) )
 
     X0 = X0[:x0_idx]
-    return X0, bounds
+
+    return X0, bounds, x_names
 ################################################################################
 
 animal_velocity = pr.V_AN
@@ -295,12 +301,13 @@ target_params = pr.default_param4optimization
 Duration = 10000
 dt = 0.1
 Cm = 3.0
-#X, bounds = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
+_, bounds, x_names = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
 
-with h5py.File("_results_mse.h5", "r") as dfile:
+with h5py.File("mse_results.h5", "r") as dfile:
     X = dfile["X"][:]
 
-
+for idx in range(len(X)):
+    print(x_names[idx], " = ", X[idx])
 
 Erev_hist, tau_m_hist = simulate(X, Duration, dt, Cm, animal_velocity, params_generators, params_synapses)
 t = np.arange(0, Duration, dt)
