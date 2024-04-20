@@ -154,27 +154,27 @@ theta_spatial_generators_dend = {
 }
 
 ######################################################################
-NN = 70 # number of neurons
-
-neuron_params = {
-    "class" : "OriginCompartment",
-    "name"  : "ca1pyr",
-    "V0" : np.array([0.0, ]),
-}
-
+NN = 100 # number of neurons
 
 # neuron_params = {
-#     "class" : "LIF",
+#     "class" : "OriginCompartment",
 #     "name"  : "ca1pyr",
-#     "V0": np.zeros(NN, dtype=np.float64) - 5.0,
-#     "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
-#     "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
-#     "Iextvarience": 0.3, #
-#     "El": np.zeros(NN, dtype=np.float64),
-#     "gl": np.zeros(NN, dtype=np.float64) + 0.1,
-#     "Vt" : np.zeros(1, dtype=np.float64) + 20.0,
-#     "Vreset" : np.zeros(NN, dtype=np.float64) - 20.0,
+#     "V0" : np.array([0.0, ]),
 # }
+
+
+neuron_params = {
+    "class" : "LIF",
+    "name"  : "ca1pyr",
+    "V0": np.zeros(NN, dtype=np.float64) - 5.0,
+    "Cm": np.zeros(NN, dtype=np.float64) + 3.0,
+    "Iextmean": 0.0, # np.zeros(1, dtype=np.float64) +
+    "Iextvarience": 0.3, #
+    "El": np.zeros(NN, dtype=np.float64),
+    "gl": np.zeros(NN, dtype=np.float64) + 0.1,
+    "Vt" : np.zeros(1, dtype=np.float64) + 20.0,
+    "Vreset" : np.zeros(NN, dtype=np.float64) - 20.0,
+}
 
 
 

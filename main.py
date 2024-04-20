@@ -17,7 +17,7 @@ from multiprocessing.pool import Pool
 import multiprocessing
 import pickle
 
-USE_SAVED_X0 = False
+USE_SAVED_X0 = True
 
 
 class Simulator:
@@ -97,12 +97,12 @@ class Simulator:
                 synapse_type["gmax"][syn_idx] = X[x_idx]
                 x_idx += 1
 
-        # Устанавливаем NMDA проводимости
-        for synapse_type in self.synapses_params:
-            for syn_idx in range(synapse_type["gmax_nmda"].size):
-                if synapse_type["gmax_nmda"][syn_idx] == 0: continue
-                synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
-                x_idx += 1
+        # # Устанавливаем NMDA проводимости
+        # for synapse_type in self.synapses_params:
+        #     for syn_idx in range(synapse_type["gmax_nmda"].size):
+        #         if synapse_type["gmax_nmda"][syn_idx] == 0: continue
+        #         synapse_type["gmax_nmda"][syn_idx] = X[x_idx]
+        #         x_idx += 1
 
     def run_model(self):
 
@@ -149,7 +149,7 @@ class Simulator:
             gtot += np.sum(gsyn[:, 1:], axis=0)
             gE += np.sum(gsyn[:, 1:] * synapse['Erev'].reshape(-1, 1), axis=0)
 
-        Erev_sum = gE / (gtot + 0.000001)
+        Erev_sum = gE / (gtot + 0.1)
 
         # sigma = self.target_params['sigma_place_field'] / self.animal_velocity * 1000
         # E_tot_t = 40 * np.exp(-0.5 * ((t - 0.5 * t[-1]) / sigma) ** 2) #- 5.0
@@ -414,34 +414,44 @@ def main():
     }
 
     if USE_SAVED_X0:
-        with h5py.File("results.h5", "r") as output:
+        with h5py.File("mse_results.h5", "r") as output:
             X0 = output["X"][:]
         _, bounds = get_default_x0(params)
     else:
         X0, bounds = get_default_x0(params)
 
-    print(len(X0), len(bounds))
-    args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
-    timer = time.time()
-    l = Loss4OnlySynps(X0, *args)
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("Loss value = ", l)
+    #print(X0[-1]) #-10:
+    sim = Simulator(dt, Duration, animal_velocity, theta_freq, target_params, params)
 
-    timer = time.time()
+    sim.x_2_params(X0)
+    firing, Erev_sum, gtot = sim.run_model()
 
-    print('starting optimization ... ')
-    sol = differential_evolution(Loss4OnlySynps, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
-                                 mutation=0.2, bounds=bounds, maxiter=500, \
-                                 workers=-1, updating='deferred', disp=True, strategy='best2bin', \
-                                 polish=True, args=args, callback=callback)
+    t = np.linspace(0, Duration, firing.size)
+    plt.plot(t, firing)
+    plt.show()
 
-    # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
-    callback(sol)
-    print("Time of optimization ", time.time() - timer, " sec")
-    print("success ", sol.success)
-    print("message ", sol.message)
-    print("number of interation ", sol.nit)
-    print(sol.x)
+    # print(len(X0), len(bounds))
+    # args = (dt, Duration, animal_velocity, theta_freq, target_params, params)
+    # timer = time.time()
+    # l = Loss4OnlySynps(X0, *args)
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("Loss value = ", l)
+    #
+    # timer = time.time()
+    #
+    # print('starting optimization ... ')
+    # sol = differential_evolution(Loss4OnlySynps, x0=X0, popsize=32, atol=1e-3, recombination=0.7, \
+    #                              mutation=0.2, bounds=bounds, maxiter=500, \
+    #                              workers=-1, updating='deferred', disp=True, strategy='best2bin', \
+    #                              polish=True, args=args, callback=callback)
+    #
+    # # sol = minimize(Loss, bounds=bounds, x0=X0, method='L-BFGS-B', args = args )
+    # callback(sol)
+    # print("Time of optimization ", time.time() - timer, " sec")
+    # print("success ", sol.success)
+    # print("message ", sol.message)
+    # print("number of interation ", sol.nit)
+    # print(sol.x)
 
     return
 

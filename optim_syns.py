@@ -198,7 +198,7 @@ def Loss(X,Duration, dt, Cm, animal_velocity, params_generators, params_synapses
 ###############################################################
 def callback(intermediate_result=None):
     #print("COUNTER = ", COUNTER)
-    with h5py.File("mse_results.h5", "w") as output:
+    with h5py.File(FILE4SAVING, "w") as output:
         output.create_dataset("loss", data=intermediate_result.fun)
         output.create_dataset("X", data=intermediate_result.x)
 
@@ -246,6 +246,8 @@ def get_default_x0(params):
 
     return X0, bounds, x_names
 ################################################################################
+USE_X0_FROM_FILE = True
+FILE4SAVING = "mse_results.h5"
 
 animal_velocity = pr.V_AN
 theta_freq = pr.theta_generators["params"][0]["freq"]
@@ -299,9 +301,12 @@ Duration = 10000
 dt = 0.1
 Cm = 3.0
 
-
-X, bounds, x_names = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
-
+if USE_X0_FROM_FILE:
+    _, bounds, x_names = get_default_x0({"neurons":params_generators, "synapses":params_synapses})
+    with h5py.File(FILE4SAVING, "r") as dfile:
+        X = dfile["X"][:]
+else:
+    X, bounds, x_names = get_default_x0({"neurons": params_generators, "synapses": params_synapses})
 #print(X.size, len(bounds))
 
 # timer = time.time()
